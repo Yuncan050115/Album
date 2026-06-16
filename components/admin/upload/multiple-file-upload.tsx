@@ -63,10 +63,10 @@ export default function MultipleFileUpload() {
         method: 'GET',
       }).then(res => res.json())
       if (res?.code === 200) {
-        setAlistStorage(res.data?.content)
+        setAlistStorage(Array.isArray(res.data?.content) ? res.data.content : [])
         setStorageSelect(true)
       } else {
-        toast.error('获取失败')
+        toast.error(res?.message || '获取失败')
       }
     } catch (e) {
       toast.error('获取失败')
@@ -162,7 +162,9 @@ export default function MultipleFileUpload() {
             option.onSuccess(option.file)
             await autoSubmit(flag ? outputBuffer : option.file, url, res?.data)
           } else {
-            toast.error('预览图片上传失败')
+            toast.warning('预览图片上传失败，已用原图链接入库')
+            option.onSuccess(option.file)
+            await autoSubmit(flag ? outputBuffer : option.file, url, url)
           }
         } else {
           const compressedFileFromBlob = new File([compressedFile], flag ? outputBuffer.name : option.file.name, {
@@ -174,12 +176,16 @@ export default function MultipleFileUpload() {
             option.onSuccess(option.file)
             await autoSubmit(flag ? outputBuffer : option.file, url, res?.data)
           } else {
-            toast.error('预览图片上传失败')
+            toast.warning('预览图片上传失败，已用原图链接入库')
+            option.onSuccess(option.file)
+            await autoSubmit(flag ? outputBuffer : option.file, url, url)
           }
         }
       },
-      error() {
-        toast.error('预览图片上传失败')
+      async error() {
+        toast.warning('预览压缩失败，已用原图链接入库')
+        option.onSuccess(option.file)
+        await autoSubmit(flag ? outputBuffer : option.file, url, url)
       },
     })
   }
@@ -194,6 +200,7 @@ export default function MultipleFileUpload() {
     } catch (e) {
       console.error(e)
       option.onSuccess(option.file)
+      await autoSubmit(flag ? outputBuffer : option.file, res?.data, res?.data)
     }
   }
 
@@ -332,7 +339,7 @@ export default function MultipleFileUpload() {
             <div className="w-full">
               <Select
                 disabled={isLoading}
-                defaultValue={album}
+                value={alistMountPath}
                 onValueChange={async (value: string) => {
                   setAlistMountPath(value)
                 }}

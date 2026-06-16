@@ -14,7 +14,7 @@
 
 @font-face {
   font-family: 'MoquGufeng';
-  src: url('/public/fonts/MoquGufeng.woff2') format('woff2');
+  src: url('/fonts/MoquGufeng.woff2') format('woff2');
   font-display: swap;
   font-weight: 400;
   font-style: normal;
@@ -266,7 +266,7 @@
   
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-jinghua);
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
   
   /* 确保标题使用原有字体 */
@@ -274,16 +274,6 @@
     font-family: var(--font-moqugufeng);
   }
   
-  /* 禁用光标的基础元素 */
-  html,
-  body {
-    cursor: none;
-  }
-
-  html *,
-  body * {
-    cursor: inherit;
-  }
 }
 
 /* =========== 组件层 =========== */
@@ -340,66 +330,6 @@
             filter 0.6s ease-out;
   }
   
-  /* 提升交互元素层级 */
-  button, a, [role="button"] {
-    position: relative;
-    z-index: 1001 !important; /* 必须高于光标层级 */
-  }
-  
-  /* 点击效果 */
-  button:active {
-    transform: scale(0.96);
-  }
-  
-  /* 光标相关 */
-  .magic-cursor {
-    pointer-events: none !important;
-    transform: translateZ(0);
-  }
-  
-  .cursor {
-    width: var(--size);
-    height: var(--size);
-    background: var(--color);
-    border-radius: 50%;
-    position: fixed;
-    z-index: 10999;
-    pointer-events: none;
-    transition:
-            transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275),
-            background 0.4s ease;
-    backdrop-filter: invert(1); /* 智能反色 */
-  }
-  
-  .cursor-f {
-    width: var(--size);
-    height: var(--size);
-    position: fixed;
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 10998;
-    border: 3px solid;
-    animation: rgb-pulse 4s linear infinite;
-    opacity: 0.9;
-    mix-blend-mode: screen;
-  }
-  
-  /* 点击效果优化 */
-  button:active ~ .cursor,
-  body:active .cursor {
-    transform: scale(4.5);
-    background: rgba(255, 255, 255, 0.5);
-    transition-duration: 0.15s;
-  }
-  
-  button:active ~ .cursor-f,
-  body:active .cursor-f {
-    transform: scale(0.4) rotate(180deg);
-    opacity: 1;
-    animation-duration: 2s;
-    transition-duration: 0.15s;
-  }
-  
   /* 文本颜色过渡 */
   .dark .text-white {
     transition: color 0.3s ease;
@@ -426,7 +356,7 @@
   
   /* 动画效果 */
   .show-up-motion {
-    animation: showUp 0.8s 0.5s backwards;
+    animation: showUp 0.36s 0.06s backwards;
   }
   
   /* 滚动条控制 */
@@ -472,4 +402,412 @@
   syntax: "<angle>";
   initial-value: 0deg;
   inherits: false;
+}
+
+/* =========== 2026 交互统一补丁：光标 / 点击 / 过渡 / 后台 =========== */
+@layer base {
+  html {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body { min-height: 100vh; }
+
+  a,
+  button,
+  [role="button"],
+  .cursor-pointer { touch-action: manipulation; }
+
+  button,
+  [role="button"],
+  a,
+  input,
+  textarea,
+  select {
+    transition-property: color, background-color, border-color, box-shadow, opacity, transform, filter;
+    transition-duration: 150ms;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  button:active,
+  [role="button"]:active,
+  .cursor-pointer:active { transform: translateY(1px) scale(0.988); }
+
+  @media (pointer: fine) {
+    .magic-cursor-enabled,
+    .magic-cursor-enabled * { cursor: none !important; }
+  }
+}
+
+@layer components {
+  .cursor-dot,
+  .cursor-ring,
+  .cursor-invert {
+    width: 24px;
+    height: 24px;
+    border-radius: 42% 58% 46% 54% / 52% 38% 62% 48%;
+    background: #fff;
+    mix-blend-mode: difference;
+    opacity: .94;
+    transition: width 120ms cubic-bezier(.22,1,.36,1), height 120ms cubic-bezier(.22,1,.36,1), opacity 120ms ease, filter 120ms ease, border-radius 180ms ease;
+  }
+
+  .cursor-invert::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: #fff;
+    clip-path: polygon(50% 0%, 88% 16%, 100% 50%, 84% 88%, 50% 100%, 14% 86%, 0% 50%, 16% 14%);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.72), 0 0 0 1px rgba(0,0,0,.08);
+    animation: cursor-soft-spin 4.6s linear infinite;
+  }
+
+  .cursor-dot {
+    width: 3px;
+    height: 3px;
+    border-radius: 999px;
+    background: #fff;
+    mix-blend-mode: difference;
+    opacity: .86;
+    box-shadow: 0 0 10px rgba(255,255,255,.34);
+    transition: width 100ms ease, height 100ms ease, opacity 100ms ease;
+  }
+
+  .cursor-ring {
+    width: 30px;
+    height: 30px;
+    border-radius: 42% 58% 46% 54% / 52% 38% 62% 48%;
+    border: 1px solid rgba(255,255,255,.72);
+    background: radial-gradient(circle, rgba(255,255,255,.08) 0 48%, transparent 52% 100%);
+    mix-blend-mode: difference;
+    opacity: .76;
+    transition: width 120ms cubic-bezier(.22,1,.36,1), height 120ms cubic-bezier(.22,1,.36,1), opacity 120ms ease, border-color 120ms ease, background 120ms ease, border-radius 180ms ease;
+  }
+
+  .cursor-is-interactive .cursor-invert {
+    width: 30px;
+    height: 30px;
+    opacity: .96;
+    border-radius: 36% 64% 52% 48% / 48% 56% 44% 52%;
+  }
+
+  .cursor-is-interactive .cursor-ring {
+    width: 40px;
+    height: 40px;
+    border-color: rgba(255,255,255,.88);
+    background: radial-gradient(circle, rgba(255,255,255,.14) 0 52%, transparent 55% 100%);
+  }
+
+  .cursor-is-interactive .cursor-dot {
+    width: 2px;
+    height: 2px;
+  }
+
+  .cursor-is-text .cursor-invert {
+    width: 22px;
+    height: 22px;
+    opacity: .82;
+  }
+
+  .cursor-is-text .cursor-ring {
+    width: 28px;
+    height: 28px;
+    opacity: .68;
+  }
+
+  .cursor-is-down .cursor-invert {
+    width: 18px;
+    height: 18px;
+    opacity: .98;
+    filter: contrast(1.25);
+  }
+
+  .cursor-is-down .cursor-ring {
+    width: 24px;
+    height: 24px;
+    opacity: .94;
+  }
+
+  .cursor-is-hidden .cursor-dot,
+  .cursor-is-hidden .cursor-ring,
+  .cursor-is-hidden .cursor-invert { opacity: 0; }
+
+  .cursor-burst {
+    pointer-events: none;
+    position: fixed;
+    z-index: 2147483646;
+    width: 1px;
+    height: 1px;
+    transform: translate(-50%, -50%);
+    mix-blend-mode: difference;
+  }
+
+  .cursor-burst::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 22px;
+    height: 22px;
+    border: 1px solid rgba(255,255,255,.82);
+    border-radius: 42% 58% 46% 54% / 52% 38% 62% 48%;
+    transform: translate(-50%, -50%) scale(.45);
+    animation: cursor-ripple 620ms cubic-bezier(.16,1,.3,1) forwards;
+  }
+
+  .cursor-burst i {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 2px;
+    height: 2px;
+    border-radius: 999px;
+    background: #fff;
+    transform: rotate(var(--angle)) translateX(0);
+    animation: cursor-burst-fade 720ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes cursor-burst-fade {
+    0% { opacity: .88; transform: rotate(var(--angle)) translateX(0) scale(1); }
+    64% { opacity: .50; }
+    100% { opacity: 0; transform: rotate(var(--angle)) translateX(var(--distance)) scale(.16); }
+  }
+
+  @keyframes cursor-ripple {
+    0% { opacity: .82; transform: translate(-50%, -50%) scale(.45) rotate(0deg); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(2.25) rotate(42deg); }
+  }
+
+  @keyframes cursor-soft-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .interactive-surface {
+    position: relative;
+    overflow: hidden;
+    transform: translateZ(0);
+    transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 160ms cubic-bezier(0.22, 1, 0.36, 1),
+      filter 160ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .interactive-surface::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    background: linear-gradient(135deg, transparent 35%, rgba(255,255,255,0.14), transparent 65%);
+    transition: opacity 160ms ease;
+  }
+
+  .interactive-surface:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+    filter: saturate(1.03) contrast(1.01);
+  }
+
+  .interactive-surface:hover::after { opacity: 1; }
+
+  .image-skeleton {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, rgba(148,163,184,.16), rgba(255,255,255,.36), rgba(148,163,184,.16));
+    background-size: 240% 100%;
+    animation: image-skeleton 1.15s ease-in-out infinite;
+  }
+
+  @keyframes image-skeleton {
+    0% { background-position: 120% 0; }
+    100% { background-position: -120% 0; }
+  }
+
+  .admin-glass-panel {
+    border: 1px solid color-mix(in oklab, var(--border), transparent 35%);
+    background: color-mix(in oklab, var(--background), transparent 16%);
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+    backdrop-filter: blur(18px);
+  }
+}
+
+@media (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .cursor-dot,
+  .cursor-ring,
+  .cursor-invert,
+  .cursor-burst { display: none !important; }
+
+  .interactive-surface,
+  .interactive-surface:hover { transform: none; }
+
+  .show-up-motion { animation: none !important; }
+}
+
+/* =========== 2026 精简后台补丁 =========== */
+@layer components {
+  .admin-page-title {
+    @apply text-2xl font-semibold tracking-tight;
+  }
+
+  .admin-muted-card {
+    @apply rounded-3xl border border-border/60 bg-background/70 shadow-sm backdrop-blur-xl;
+  }
+}
+
+/* =========== Hotfix 6: restore clean cursor + pointer-follow image glow =========== */
+@layer components {
+  .cursor-dot,
+  .cursor-ring {
+    pointer-events: none;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 2147483647;
+    opacity: 1;
+    will-change: transform, width, height, opacity, border-color, background-color;
+    mix-blend-mode: difference;
+  }
+
+  .cursor-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.86);
+    border: 1px solid rgba(15, 23, 42, 0.22);
+    box-shadow: 0 0 18px rgba(255, 255, 255, 0.26);
+    transition: width 150ms ease, height 150ms ease, background-color 150ms ease, opacity 150ms ease;
+  }
+
+  .cursor-ring {
+    width: 38px;
+    height: 38px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.10), transparent 62%);
+    box-shadow: 0 10px 35px rgba(15, 23, 42, 0.12);
+    backdrop-filter: blur(2px);
+    transition: width 170ms ease, height 170ms ease, border-color 170ms ease, opacity 170ms ease, background-color 170ms ease;
+  }
+
+  .cursor-is-interactive .cursor-dot {
+    width: 10px;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.96);
+  }
+
+  .cursor-is-interactive .cursor-ring {
+    width: 52px;
+    height: 52px;
+    border-color: rgba(168, 85, 247, 0.84);
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.15), transparent 66%);
+  }
+
+  .cursor-is-text .cursor-ring {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    border-color: rgba(99, 102, 241, 0.58);
+  }
+
+  .cursor-is-down .cursor-dot {
+    width: 18px;
+    height: 18px;
+    background: rgba(255, 255, 255, 0.42);
+  }
+
+  .cursor-is-down .cursor-ring {
+    width: 30px;
+    height: 30px;
+    opacity: 0.75;
+  }
+
+  .cursor-is-hidden .cursor-dot,
+  .cursor-is-hidden .cursor-ring { opacity: 0; }
+
+  .cursor-invert { display: none !important; }
+
+  .interactive-surface::after {
+    background:
+      radial-gradient(220px circle at var(--surface-x, 50%) var(--surface-y, 50%), rgba(255,255,255,0.26), rgba(255,255,255,0.08) 34%, transparent 66%),
+      linear-gradient(135deg, transparent 34%, rgba(255,255,255,0.12), transparent 66%);
+    opacity: 0;
+    mix-blend-mode: screen;
+  }
+
+  .interactive-surface:hover::after { opacity: 1; }
+
+  .dark .interactive-surface::after {
+    background:
+      radial-gradient(240px circle at var(--surface-x, 50%) var(--surface-y, 50%), rgba(168,85,247,0.28), rgba(236,72,153,0.10) 36%, transparent 70%),
+      linear-gradient(135deg, transparent 34%, rgba(255,255,255,0.10), transparent 66%);
+  }
+}
+
+
+/* =========== Hotfix 7: transparent header + cleaner simmc-like cursor =========== */
+@layer components {
+  .cursor-dot,
+  .cursor-ring {
+    pointer-events: none;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 2147483647;
+    will-change: transform, width, height, opacity;
+    mix-blend-mode: difference;
+  }
+
+  .cursor-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 999px;
+    border: 0;
+    background: rgba(245, 245, 245, 0.92);
+    box-shadow: none;
+    transition: width 120ms ease, height 120ms ease, opacity 120ms ease;
+  }
+
+  .cursor-ring {
+    width: 28px;
+    height: 28px;
+    border: 0 !important;
+    border-radius: 999px;
+    background: rgba(214, 214, 214, 0.34);
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    opacity: .72;
+    transition: width 150ms ease, height 150ms ease, opacity 150ms ease, background-color 150ms ease;
+  }
+
+  .cursor-is-interactive .cursor-dot {
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.96);
+  }
+
+  .cursor-is-interactive .cursor-ring {
+    width: 36px;
+    height: 36px;
+    background: rgba(224, 224, 224, 0.40);
+    opacity: .82;
+  }
+
+  .cursor-is-text .cursor-ring {
+    width: 24px;
+    height: 24px;
+    background: rgba(224, 224, 224, 0.30);
+  }
+
+  .cursor-is-down .cursor-dot {
+    width: 12px;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.46);
+  }
+
+  .cursor-is-down .cursor-ring {
+    width: 20px;
+    height: 20px;
+    opacity: .66;
+  }
 }

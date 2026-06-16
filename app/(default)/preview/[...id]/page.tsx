@@ -6,6 +6,7 @@ import { fetchConfigsByKeys } from '~/server/db/query/configs'
 
 export default async function Label({params}: { params: any }) {
   const { id } = await params
+  const imageId = Array.isArray(id) ? id[0] : String(id)
 
   const getData = async (id: string) => {
     'use server'
@@ -19,12 +20,12 @@ export default async function Label({params}: { params: any }) {
     ])
   }
 
-  const imageData = await getData(id)
+  const imageData = await getData(imageId)
 
   const props: PreviewImageHandleProps = {
     data: imageData[0],
     args: 'getImages-client-preview',
-    id: id,
+    id: imageId,
     configHandle: getConfig,
   }
 

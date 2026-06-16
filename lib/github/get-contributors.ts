@@ -8,24 +8,30 @@ export async function fetchContributors(
   repoOwner: string,
   repoName: string,
 ): Promise<Contributor[]> {
-  const headers = new Headers();
-  if (process.env.GITHUB_TOKEN)
-    headers.set('Authorization', `Bearer ${process.env.GITHUB_TOKEN}`);
+  try {
+    const headers = new Headers();
+    if (process.env.GITHUB_TOKEN)
+      headers.set('Authorization', `Bearer ${process.env.GITHUB_TOKEN}`);
 
-  const response = await fetch(
-    `https://api.github.com/repos/${repoOwner}/${repoName}/contributors?per_page=50`,
-    {
-      headers,
-      next: { revalidate: 1000 * 1000 },
-    },
-  );
+    const response = await fetch(
+      `https://api.github.com/repos/${repoOwner}/${repoName}/contributors?per_page=50`,
+      {
+        headers,
+        next: { revalidate: 60 * 60 * 24 },
+      },
+    );
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch contributors: ${response.statusText}`);
+    if (!response.ok) {
+      console.warn(`GitHub contributors skipped: ${response.statusText}`);
+      return [];
+    }
+
+    const contributors = (await response.json()) as Contributor[];
+    return contributors
+      .filter((contributor) => !contributor.login.endsWith('[bot]'))
+      .sort((a, b) => b.contributions - a.contributions);
+  } catch (error) {
+    console.warn('GitHub contributors skipped:', error);
+    return [];
   }
-
-  const contributors = (await response.json()) as Contributor[];
-  return contributors
-    .filter((contributor) => !contributor.login.endsWith('[bot]'))
-    .sort((a, b) => b.contributions - a.contributions);
 }

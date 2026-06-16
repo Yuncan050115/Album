@@ -2,7 +2,37 @@
 
 'use server'
 
-import { db } from '~/server/lib/db'
+import { db, withDbRetry } from '~/server/lib/db'
+
+type CacheRow = {
+  id: string
+  config_key: string
+  config_value: string | null
+  detail?: string | null
+}
+
+const CONFIG_CACHE_TTL = Number(process.env.CONFIG_CACHE_TTL_MS || 5000)
+const configCache = new Map<string, { expires: number, value: CacheRow[] }>()
+
+function cacheKey(keys: string[]) {
+  return [...keys].sort().join('|')
+}
+
+function readCache(keys: string[]) {
+  const hit = configCache.get(cacheKey(keys))
+  if (!hit || hit.expires < Date.now()) return null
+  return hit.value
+}
+
+function writeCache(keys: string[], value: CacheRow[]) {
+  configCache.set(cacheKey(keys), { expires: Date.now() + CONFIG_CACHE_TTL, value })
+  return value
+}
+
+export async function clearConfigCache() {
+  configCache.clear()
+}
+
 
 /**
  * 根据单个key获取配置
@@ -10,7 +40,7 @@ import { db } from '~/server/lib/db'
  * @returns 配置项
  */
 export async function fetchConfigByKey(key: string) {
-  return await db.configs.findFirst({
+  return await withDbRetry(() => db.configs.findFirst({
     where: {
       config_key: key
     },
@@ -20,7 +50,7 @@ export async function fetchConfigByKey(key: string) {
       config_value: true,
       detail: true
     }
-  });
+  }), `config:${key}`);
 }
 
 /**
@@ -29,19 +59,7 @@ export async function fetchConfigByKey(key: string) {
  * @returns 配置列表
  */
 export async function fetchConfigByKeys(keys: string[]) {
-  return await db.configs.findMany({
-    where: {
-      config_key: {
-        in: keys
-      }
-    },
-    select: {
-      id: true,
-      config_key: true,
-      config_value: true,
-      detail: true
-    }
-  });
+  return fetchConfigsByKeys(keys)
 }
 
 /**
@@ -50,7 +68,10 @@ export async function fetchConfigByKeys(keys: string[]) {
  * @returns 配置列表
  */
 export async function fetchConfigsByKeys(keys: string[]) {
-  return await db.configs.findMany({
+  const cached = readCache(keys)
+  if (cached) return cached
+
+  const value = await withDbRetry(() => db.configs.findMany({
     where: {
       config_key: {
         in: keys
@@ -62,7 +83,8 @@ export async function fetchConfigsByKeys(keys: string[]) {
       config_value: true,
       detail: true
     }
-  });
+  }), `configs:${cacheKey(keys)}`)
+  return writeCache(keys, value)
 }
 
 /**

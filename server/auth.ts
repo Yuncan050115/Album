@@ -5,9 +5,10 @@ import { db } from '~/server/lib/db'
 import { z } from 'zod'
 import CryptoJS from 'crypto-js'
 import { fetchSecretKey } from '~/server/db/query/configs'
+import { AUTH_SECRET } from '~/server/auth-secret'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  secret: process.env.AUTH_SECRET || 'pic-impact',
+  secret: AUTH_SECRET,
   adapter: PrismaAdapter(db),
   pages: {
     signIn: '/login',
@@ -23,7 +24,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email: { label: "email", type: "email", placeholder: "example@qq.com" },
         password: { label: "Password", type: "password" }
       },
-      async authorize(credentials, req) {
+      async authorize(credentials) {
         const parsedCredentials = z
           .object({ email: z.string().email(), password: z.string().min(6) })
           .safeParse(credentials);
@@ -53,7 +54,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     })
   ],
   callbacks: {
-    async jwt({ token, user, account, profile, trigger, session }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id
         token.name = user.name

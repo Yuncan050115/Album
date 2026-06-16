@@ -1,121 +1,267 @@
 <h1 align="center">
 <img width="28" src="./public/maskable-icon.png">
-PicImpact-Refactoring
+之江影集
 </h1>
 
 <p align="center">
   <a href="https://github.com/besscroft/PicImpact/blob/main/LICENSE"><img src="https://img.shields.io/github/license/besscroft/PicImpact?style=flat-square" alt="许可证"></a>
-  <img src="https://img.shields.io/github/repo-size/besscroft/PicImpact?style=flat-square&color=328657" alt="存储库大小">
 </p>
 
-PicImpact 是一个支持自部署的摄影师专用的摄影作品展示网站，基于 Next.js + Hono.js 开发。
+------
 
-### 功能特性
+## 项目简介
 
-- 瀑布流相册展示图片，支持[实况照片(Live Photos)](https://support.apple.com/zh-cn/104966)，基于 [LivePhotosKit JS](https://developer.apple.com/documentation/livephotoskitjs) 开发。
-- 点击图片查看原图，浏览图片信息和 EXIF 信息，支持直链访问。
-- 响应式设计，在 PC 和移动端都有不错的体验，支持暗黑模式。
-- 图片存储兼容 S3 API、Cloudflare R2、AList API。
-- 图片支持绑定标签，并且可通过标签进行交互，筛选标签下所有图片。
-- 支持输出 RSS，可以使用 [Follow](https://github.com/RSSNext/Follow) 订阅，并支持订阅源所有权验证。
-- 支持批量自动化上传，上传图片时会生成 0.3 倍率的压缩图片，以提供加载优化。
-- 后台有图片数据统计、图片上传、图片维护、相册管理、系统设置和存储配置功能。
-- 双因素认证功能，基于 TOTP 算法 [RFC 6238](https://www.rfc-editor.org/rfc/rfc6238)，支持 Google Authenticator、Microsoft Authenticator 和 1Password 等。
-- 基于 SSR 的混合渲染，采用状态机制，提供良好的使用体验。
-- 基于 prisma 的自动初始化数据库和数据迁移，简化部署流程。
-- 支持 Vercel 部署、Node.js 部署、Docker 等容器化部署，当然 k8s 也支持。
+**之江影集** 是一个为个人摄影、旅行记录和图像收藏而重构的自部署相册系统。
 
-### 如何部署
+它不是一个单纯的图片列表，而是我自己的影像主页：前台保留沉浸式视觉、瀑布流浏览、图片预览、EXIF 信息与暗色模式；后台则用于管理相册、维护图片、配置存储源、批量导入与迁移图片。
 
-你可以点击下面的按钮来一键部署到 Vercel，**然后将 `Build Command` 设置为 `pnpm run build:vercel`**，也可以 Fork 项目后手动部署到任何支持的平台。
+项目基于 **Next.js 16 + HonoJS + Prisma 7 + PostgreSQL** 开发，支持 AList / OpenList、腾讯云 COS、S3 兼容存储等多种图片来源。
 
-> 我们推荐当新版本发布时您再进行版本更新！
+------
 
-<a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FCN-Yuncan%2FAlbum&env=DATABASE_URL,AUTH_SECRET"><img src="https://vercel.com/button" alt="Deploy with Vercel"/></a>
+## 功能特性
 
-| Key          | 备注                                                                                           |
-|--------------|----------------------------------------------------------------------------------------------|
-| DATABASE_URL | Postgre 数据库 url，`postgresql://[用户名]:[密码]@[地址和端口]/[数据库]`，如：`postgresql://postgres:666666@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres` |
-| AUTH_SECRET  | 权限机密，你可以执行 npx auth secret 生成一个，反正是随机的字符串就行                                                  |
+### 前台展示
 
-默认账号：`admin@qq.com`，默认密码：`666666`，**登录后请先去设置里面修改密码！**
+- 瀑布流图片展示，支持响应式布局。
+- 支持暗色模式与远程动态背景。
+- 点击图片进入沉浸式预览页。
+- 预览页支持上一张 / 下一张切换、键盘方向键、Esc 退出。
+- 相机参数默认隐藏，可手动展开查看。
+- 支持 EXIF 信息展示，包括相机、镜头、焦距、光圈、快门、ISO、拍摄时间等。
+- 支持标签浏览与相册筛选。
+- 支持自定义光标与点击粒子动效。
+- 顶部透明玻璃标题栏，适配个人主页视觉风格。
 
-> 请根据您的数据库供应商来填写正确的数据库 `connect url`。
->
-> 如果是 Vercel 部署，直接将 `Build Command` 设置为 `pnpm run build:vercel` 即可。
->
-> 如果您自行使用 node 部署，请使用 `pnpm run build:node` 命令来构建。
+### 后台管理
 
-更多详细配置请查阅[文档](https://ziyume.com/docs/pic)
+- 图片资产维护。
+- 图片上传。
+- 相册管理。
+- 图片绑定相册。
+- 图片显示 / 隐藏。
+- 首页展示控制。
+- 存储配置管理。
+- AList / OpenList 目录浏览与批量导入。
+- 腾讯云 COS 配置、连接测试、上传与迁移。
+- AList / OpenList 图片一键迁移至腾讯云 COS。
+- 系统偏好设置。
+- 账号与密码管理。
+- TOTP 双因素认证。
 
-### 本地开发
+------
 
-克隆到本地开发:
+## 技术栈
 
-```shell
-git clone https://github.com/besscroft/PicImpact.git
+### 核心框架
 
-pnpm i
+- [Next.js 16](https://nextjs.org/)
+- [React 19](https://react.dev/)
+- [Hono](https://hono.dev/)
+- [Prisma 7](https://www.prisma.io/)
+- [PostgreSQL](https://www.postgresql.org/)
 
-pnpm run dev
+### UI 与交互
+
+- [Tailwind CSS 4](https://tailwindcss.com/)
+- [Radix UI](https://www.radix-ui.com/)
+- [shadcn/ui](https://ui.shadcn.com/)
+- [Framer Motion](https://www.framer.com/motion/)
+- [Lucide React](https://lucide.dev/)
+
+### 图片与存储
+
+- 腾讯云 COS
+- AList / OpenList API
+- S3 Compatible API
+- EXIF Reader
+- Sharp
+
+------
+
+## 本地开发
+
+### 安装依赖
+
+```bash
+pnpm install
 ```
 
-如果您有任何建议，欢迎反馈！
+至少要配置：
 
-### TODO
+```env
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE?sslmode=require"
+AUTH_SECRET="please-change-me"
+NEXTAUTH_SECRET="please-change-me"
+AUTH_TRUST_HOST=true
+```
 
-- [ ] Map 地图展示
+### 生成 Prisma Client
 
-...
+```bash
+pnpm prisma:generate
+```
 
-### 代码贡献
+### 启动开发环境
 
-[提出新想法 & 提交 Bug](https://github.com/besscroft/PicImpact/issues/new) | [Fork & Pull Request](https://github.com/besscroft/PicImpact/fork)
+```bash
+pnpm dev
+```
 
-PicImpact 欢迎各种贡献，包括但不限于改进，新功能，文档和代码改进，问题和错误报告。
+默认访问：
 
-`v1` 版本目前停止维护，代码归档在 `v1` 分支。
+```txt
+http://localhost:3000
+```
 
-目前正在开发 v2 版本，同时接受 `PR`！
+后台入口：
 
-> 有需求和建议都可以提，有空的话我会处理，但受限于 Next / SSR 的⌈局限性⌋，以及照顾移动端使用体验，很多功能的设计上可能会有取舍。
+```txt
+http://localhost:3000/admin
+```
 
-### 隐私安全
+------
 
-您使用本程序时，需要自己去维护各个平台的配置信息（毕竟跟咱没关系，需要在对应的平台配置），以及对象存储的读写权限、访问控制、防盗链、跨域设置、缓存策略和 CDN 等配置，以最大程度的避免天价账单。
+## 默认账号
 
-如您有更多疑问，可以提交 [Issue](https://github.com/besscroft/PicImpact/issues/new)。
+首次初始化后可使用默认账号登录：
 
-### 浏览器支持
+```txt
+账号：admin@qq.com
+密码：666666
+```
 
-- Last 2 versions of Chrome, Firefox, Safari and Edge
-- Firefox ESR
+登录后请立即进入后台修改账号密码，并开启双因素认证。
 
-> 事实上不是过于老旧的浏览器，一般都是能用的。
+------
 
-### 无障碍支持
+## 腾讯云 COS 配置说明
 
-已经在尽力支持了，主要基于 [WAI-ARIA 规范](https://developer.mozilla.org/zh-CN/docs/Learn/Accessibility/WAI-ARIA_basics)，有爱，无障碍！
+| 字段      | 说明                                         |
+| --------- | -------------------------------------------- |
+| SecretId  | 腾讯云 CAM 访问密钥 SecretId，以 `AKID` 开头 |
+| SecretKey | 腾讯云 CAM 访问密钥 SecretKey                |
+| Bucket    | 完整存储桶名称，例如 `album-1250000000`      |
+| Region    | 地域，例如 `ap-guangzhou`                    |
+| Folder    | 存储目录，例如 `images/`                     |
+| Domain    | 自定义 CDN 域名，可选                        |
 
-### 技术栈
+- `SecretId` 不要填写 Bucket ID、APPID 或临时链接。
+- `Bucket` 必须是完整桶名，通常带有 APPID 后缀。
+- 存储桶需要给当前密钥开通对应读写权限。
+- 使用自定义 CDN 域名时，需要自行配置 HTTPS、缓存策略、防盗链和跨域。
 
-- Web框架：
-  - [Next.js](https://github.com/vercel/next.js)
-  - [Hono.js](https://github.com/honojs/hono)
-- UI 框架：
-  - [Radix](https://www.radix-ui.com/)
-  - [shadcn/ui](https://ui.shadcn.com/)
-- 更多组件参见 package.json
+------
 
-### 感谢
+## AList / OpenList 导入
 
-本项目使用 JetBrains 的开源许可证，基于 IntelliJ IDEA 开发，感谢！
+支持探测挂载路径，浏览目录，扫描指定目录，批量导入图片，自动跳过重复 URL，自动绑定目标相册。
 
-![JetBrains 徽标（主要） logo](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg)
+导入完成后，图片会写入数据库并出现在对应相册中。
 
-![IntelliJ IDEA logo](https://resources.jetbrains.com/storage/products/company/brand/logos/IntelliJ_IDEA.svg)
+------
 
-### License
+## AList / OpenList 迁移到腾讯云 COS
 
-PicImpact is open source software licensed as [MIT](https://github.com/besscroft/PicImpact/blob/main/LICENSE).
+进入：
+
+```txt
+后台 → 存储配置 → 腾讯云 COS → AList → COS
+```
+
+迁移逻辑：
+
+1. 读取数据库中来自 AList / OpenList 的图片。
+2. 下载原图。
+3. 上传到腾讯云 COS。
+4. 更新图片 URL。
+5. 保留原图片记录与相册绑定关系。
+
+适合从临时图床、AList、OpenList 逐步迁移到正式对象存储。
+
+
+
+------
+
+## Node.js 部署
+
+```bash
+pnpm install
+pnpm prisma:generate
+pnpm build
+pnpm start
+```
+
+建议使用：
+
+- Node.js 24 LTS 或更新稳定版本
+- PostgreSQL / Neon / Supabase
+- Nginx / Caddy 反向代理
+- HTTPS 证书
+- 对象存储 + CDN
+
+本项目同时支持部署到vercel。
+
+------
+
+## 环境变量参考
+
+| Key                                  | 说明                                       |
+| ------------------------------------ | ------------------------------------------ |
+| DATABASE_URL                         | PostgreSQL 数据库连接地址                  |
+| AUTH_SECRET                          | 登录认证密钥                               |
+| NEXTAUTH_SECRET                      | NextAuth 认证密钥，建议与 AUTH_SECRET 一致 |
+| AUTH_TRUST_HOST                      | 部署在 Vercel / 反代环境时建议设为 true    |
+| NEXT_PUBLIC_ENABLE_REMOTE_BACKGROUND | 是否启用远程动态背景                       |
+| NODEJS_HELPERS                       | 部分部署环境兼容参数                       |
+
+------
+
+## 隐私与安全
+
+本项目涉及对象存储、数据库、后台账号和图片直链，部署时请注意：
+
+- 不要提交 `.env.local`。
+- 不要把 SecretKey 写进 README 或公开仓库。
+- 对象存储建议开启最小权限策略。
+- 公开读写权限需要谨慎配置。
+- 使用 CDN 时建议配置防盗链、缓存策略和 HTTPS。
+- 后台账号上线后请立即修改默认密码。
+- 建议开启 TOTP 双因素认证。
+
+------
+
+## 浏览器支持
+
+建议使用较新的浏览器：
+
+- Chrome
+- Edge
+- Firefox
+- Safari
+
+移动端和桌面端均已适配，但更推荐现代浏览器访问。
+
+------
+
+## TODO
+
+-  地图足迹展示。
+-  时间线模式。
+-  图片故事 / 游记模式。
+-  更完整的批量编辑。
+-  COS 图片自动压缩与多尺寸生成。
+-  更细的相册权限控制。
+-  更完整的移动端后台体验。
+
+
+
+欢迎提交 Issue，也欢迎直接 Fork 后提交 Pull Request。
+
+------
+
+## License
+
+本项目基于 MIT License 开源。详见 [MIT](https://github.com/besscroft/PicImpact/blob/main/LICENSE).
+
 

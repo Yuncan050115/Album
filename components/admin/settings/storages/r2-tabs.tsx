@@ -19,11 +19,30 @@ import { useButtonStore } from '~/app/providers/button-store-providers'
 import R2EditSheet from '~/components/admin/settings/storages/r2-edit-sheet'
 import { Badge } from '~/components/ui/badge'
 
+const R2_CONFIG_FALLBACK = [
+  { id: 'r2_accesskey_id', config_key: 'r2_accesskey_id', config_value: '', detail: 'Cloudflare R2 Access Key ID' },
+  { id: 'r2_accesskey_secret', config_key: 'r2_accesskey_secret', config_value: '', detail: 'Cloudflare R2 Secret Access Key' },
+  { id: 'r2_endpoint', config_key: 'r2_endpoint', config_value: '', detail: 'R2 S3 API Endpoint' },
+  { id: 'r2_bucket', config_key: 'r2_bucket', config_value: '', detail: 'R2 Bucket 名称' },
+  { id: 'r2_storage_folder', config_key: 'r2_storage_folder', config_value: '', detail: '存储目录，可空' },
+  { id: 'r2_public_domain', config_key: 'r2_public_domain', config_value: '', detail: '公开访问域名/CDN 域名，可空' },
+]
+
+async function readJsonResponse(res: Response) {
+  const text = await res.text()
+  try {
+    return text ? JSON.parse(text) : {}
+  } catch {
+    return { code: res.status || 500, message: text || `HTTP ${res.status}` }
+  }
+}
+
+
 export default function R2Tabs() {
   const [connectionLoading, setConnectionLoading] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'unconfigured' | null>(null)
   
-  const { data, error, isValidating, mutate } = useSWR('/api/v1/storage/r2/info', fetcher
+  const { data, error, isValidating, mutate } = useSWR('/api/v1/settings/r2-info', fetcher
     , { revalidateOnFocus: false })
   const { setR2Edit, setR2EditData } = useButtonStore(
     (state) => state,
@@ -36,7 +55,7 @@ export default function R2Tabs() {
   const isConfigured = () => {
     if (!data || !Array.isArray(data)) return false
     
-    const requiredKeys = ['account_id', 'access_key_id', 'secret_access_key', 'bucket', 'public_url']
+    const requiredKeys = ['r2_accesskey_id', 'r2_accesskey_secret', 'r2_endpoint', 'r2_bucket']
     return requiredKeys.every(key => 
       data.some(item => item.config_key === key && item.config_value)
     )
@@ -53,13 +72,14 @@ export default function R2Tabs() {
     setConnectionStatus(null)
     
     try {
-      const res = await fetch('/api/v1/storage/test-connection', {
+      const response = await fetch('/api/v1/storage/test-connection', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ storage: 'r2' })
-      }).then(res => res.json())
+      })
+      const res = await readJsonResponse(response)
       
-      if (res?.code === 200) {
+      if (response.ok && res?.code === 200) {
         toast.success('R2连接成功')
         setConnectionStatus('connected')
       } else {
@@ -126,8 +146,9 @@ export default function R2Tabs() {
               variant="outline"
               className="cursor-pointer"
               onClick={() => {
+                const rows = Array.isArray(data) ? data : R2_CONFIG_FALLBACK
+                setR2EditData(rows.map((item: any) => ({ ...item })))
                 setR2Edit(true)
-                setR2EditData(JSON.parse(JSON.stringify(data)))
               }}
               aria-label="编辑"
             >
@@ -137,7 +158,7 @@ export default function R2Tabs() {
         </div>
       </Card>
       {
-        data &&
+        Array.isArray(data) &&
         <Card className="p-2">
           <Table aria-label="R2 设置">
             <TableHeader>
@@ -157,7 +178,7 @@ export default function R2Tabs() {
           </Table>
         </Card>
       }
-      {Array.isArray(data) && data.length > 0 && <R2EditSheet />}
+      <R2EditSheet />
     </div>
   )
 }

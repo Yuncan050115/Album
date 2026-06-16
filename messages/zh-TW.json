@@ -10,7 +10,7 @@
   "Login": {
     "title": "歡迎登入",
     "email": "電子郵件",
-    "password": "密碼", 
+    "password": "密碼",
     "login": "登入",
     "forget": "忘記密碼了？",
     "otp": "雙因素口令",
@@ -29,7 +29,8 @@
     "password": "密碼修改",
     "account": "帳戶設定",
     "storages": "儲存配置",
-    "authenticator": "雙因素驗證"
+    "authenticator": "雙因素驗證",
+    "import": "導入"
   },
   "Tips": {
     "noImg": "暫無圖片",
@@ -51,7 +52,9 @@
     "canal": "取消",
     "delete": "刪除",
     "yesDelete": "確定刪除",
-    "goBack": "返回"
+    "goBack": "返回",
+    "cancel": "取消",
+    "confirm": "確認"
   },
   "Dashboard": {
     "picData": "照片數據",
@@ -150,5 +153,18 @@
     "inputUsername": "請輸入新的用戶名。",
     "avatar": "頭像",
     "inputAvatar": "請輸入新的頭像地址。"
+  },
+  "Import": {
+    "title": "導入",
+    "selectAlbum": "確認",
+    "noImagesSelected": "No images selected",
+    "importImages": "導入",
+    "importSuccess": "Imported",
+    "importFailed": "Import failed",
+    "targetAlbum": "Target album",
+    "currentDirectory": "Current directory",
+    "parentDirectory": "Parent directory",
+    "selectImages": "Select images",
+    "selectedImages": "Selected images"
   }
 }

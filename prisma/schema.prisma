@@ -1,10 +1,10 @@
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../server/generated/prisma"
 }
 
 // auth.js
@@ -95,6 +95,8 @@ model Images {
   del                  Int                    @default(0) @db.SmallInt
   imagesAlbumsRelation ImagesAlbumsRelation[]
 
+  @@index([del, show, show_on_mainpage, createdAt, updatedAt])
+  @@index([del, sort, createdAt, updatedAt])
   @@map("images")
 }
 
@@ -126,6 +128,7 @@ model Albums {
   imagesAlbumsRelation ImagesAlbumsRelation[]
   image_sorting        Int                    @default(1) @db.SmallInt
 
+  @@index([del, show, sort])
   @@map("albums")
 }
 
@@ -137,5 +140,7 @@ model ImagesAlbumsRelation {
   imageId     String @db.VarChar(50)
 
   @@id([imageId, album_value])
+  @@index([album_value])
+  @@index([imageId])
   @@map("images_albums_relation")
 }

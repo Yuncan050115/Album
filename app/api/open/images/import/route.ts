@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
+import { AUTH_SECRET } from '~/server/auth-secret'
+
 import { batchImportImages } from '~/server/db/operate/images'
+
 
 export async function POST(req: Request) {
   try {
     // 验证用户是否登录
-    const token = await getToken({ req })
+    const token = await getToken({ req, secret: AUTH_SECRET })
     if (!token) {
       return NextResponse.json({ code: 401, message: '未授权，请登录' }, { status: 401 })
     }
@@ -22,15 +25,19 @@ export async function POST(req: Request) {
     }
     
     // 导入图片
-    const count = await batchImportImages(images, album)
+    const result = await batchImportImages(images, album)
     
     return NextResponse.json({ 
       code: 200, 
       message: 'Success', 
-      data: count 
+      data: result.created,
+      stats: result
     })
   } catch (error) {
     console.error('导入图片失败', error)
     return NextResponse.json({ code: 500, message: '服务器错误' }, { status: 500 })
   }
 } 
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'

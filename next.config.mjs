@@ -25,10 +25,7 @@ const baseConfig = {
       ]
     }
   ],
-  serverExternalPackages: ['pg'],
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  serverExternalPackages: ['pg', '@prisma/adapter-pg'],
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -52,10 +49,8 @@ const baseConfig = {
     return config
   },
   experimental: {
-    // 保留推荐使用的优化选项
+    // Next 16 稳定配置：避免实验项阻塞启动
     optimizeCss: false,
-    legacyBrowsers: false,
-    // 已移除不推荐配置
   }
 }
 

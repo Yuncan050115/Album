@@ -11,7 +11,7 @@
     "title": "Welcome Login",
     "email": "Email",
     "password": "Password",
-    "login": "Login", 
+    "login": "Login",
     "forget": "Forgot password?",
     "otp": "Two-factor Authentication Code",
     "goHome": "Back to Home",
@@ -29,7 +29,8 @@
     "password": "Password Modification",
     "account": "Account Settings",
     "storages": "Storage Configuration",
-    "authenticator": "Two-factor Authentication"
+    "authenticator": "Two-factor Authentication",
+    "import": "Import"
   },
   "Tips": {
     "noImg": "No images",
@@ -39,7 +40,7 @@
     "login": "Login",
     "language": "Switch Language",
     "light": "Switch to ⌈White Night⌋",
-    "dark": "Switch to ⌈Dark Night⌋", 
+    "dark": "Switch to ⌈Dark Night⌋",
     "issue": "Feedback | Suggestions",
     "submit": "Submit",
     "reset": "Reset",
@@ -51,7 +52,9 @@
     "canal": "Cancel",
     "delete": "Delete",
     "yesDelete": "Confirm deletion",
-    "goBack": "GO back"
+    "goBack": "GO back",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
   },
   "Dashboard": {
     "picData": "Photo Data",
@@ -71,7 +74,7 @@
   },
   "Upload": {
     "simple": "Single File Upload",
-    "livephoto": "LivePhoto Upload", 
+    "livephoto": "LivePhoto Upload",
     "multiple": "Multiple Files Upload",
     "manualUpload": "Manual Upload",
     "uploadTips1": "Click to upload file or drag file here",
@@ -84,7 +87,7 @@
     "videoUrl": "LivePhoto Video URL",
     "width": "Image Width px",
     "height": "Image Height px",
-    "lon": "Longitude", 
+    "lon": "Longitude",
     "lat": "Latitude",
     "inputLon": "Enter Longitude",
     "inputLat": "Enter Latitude",
@@ -150,5 +153,18 @@
     "inputUsername": "Please enter the new username.",
     "avatar": "Avatar",
     "inputAvatar": "Please enter the avatar URL."
+  },
+  "Import": {
+    "title": "Import",
+    "selectAlbum": "Confirm",
+    "noImagesSelected": "No images selected",
+    "importImages": "Import",
+    "importSuccess": "Imported",
+    "importFailed": "Import failed",
+    "targetAlbum": "Target album",
+    "currentDirectory": "Current directory",
+    "parentDirectory": "Parent directory",
+    "selectImages": "Select images",
+    "selectedImages": "Selected images"
   }
 }

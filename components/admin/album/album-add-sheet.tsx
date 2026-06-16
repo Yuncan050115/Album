@@ -73,7 +73,7 @@ export default function AlbumAddSheet(props : Readonly<HandleProps>) {
               <input
                 type="text"
                 id="name"
-                value={data?.name}
+                value={data?.name ?? ''}
                 placeholder="输入相册名称"
                 onChange={(e) => setData({...data, name: e.target.value})}
                 className="mt-1 w-full border-none p-0 focus:border-transparent focus:outline-none focus:ring-0 sm:text-sm"
@@ -88,7 +88,7 @@ export default function AlbumAddSheet(props : Readonly<HandleProps>) {
               <input
                 type="text"
                 id="album_value"
-                value={data?.album_value}
+                value={data?.album_value ?? ''}
                 placeholder="输入路由，如：/tietie"
                 onChange={(e) => setData({...data, album_value: e.target.value})}
                 className="mt-1 w-full border-none p-0 focus:border-transparent focus:outline-none focus:ring-0 sm:text-sm"
@@ -103,7 +103,7 @@ export default function AlbumAddSheet(props : Readonly<HandleProps>) {
               <input
                 type="text"
                 id="detail"
-                value={data?.detail}
+                value={data?.detail ?? ''}
                 placeholder="输入详情"
                 onChange={(e) => setData({...data, detail: e.target.value})}
                 className="mt-1 w-full border-none p-0 focus:border-transparent focus:outline-none focus:ring-0 sm:text-sm"
@@ -118,7 +118,7 @@ export default function AlbumAddSheet(props : Readonly<HandleProps>) {
               <input
                 type="number"
                 id="sort"
-                value={data?.sort}
+                value={data?.sort ?? ''}
                 placeholder="0"
                 onChange={(e) => setData({...data, sort: Number(e.target.value)})}
                 className="mt-1 w-full border-none p-0 focus:border-transparent focus:outline-none focus:ring-0 sm:text-sm"
@@ -133,7 +133,7 @@ export default function AlbumAddSheet(props : Readonly<HandleProps>) {
             <input
                 type="text"
                 id="detail"
-                value={data?.license}
+                value={data?.license ?? ''}
                 placeholder="CC BY-NC-SA 4.0"
                 onChange={(e) => setData({...data, license: e.target.value})}
                 className="mt-1 w-full border-none p-0 focus:border-transparent focus:outline-none focus:ring-0 sm:text-sm"
@@ -172,7 +172,7 @@ export default function AlbumAddSheet(props : Readonly<HandleProps>) {
             <div className="flex flex-col gap-1 rounded-lg border p-3 shadow-sm">
               <div className="text-medium">相册内图片排序规则</div>
               <Select
-                value={typeof data.image_sorting === 'number' ? data.image_sorting.toString() : '1'}
+                value={typeof data?.image_sorting === 'number' ? data.image_sorting.toString() : '1'}
                 onValueChange={(value) => {
                   setData({
                     ...data,

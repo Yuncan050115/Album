@@ -406,7 +406,7 @@ export default function SimpleFileUpload() {
             <div className="w-full">
               <Select
                 disabled={isLoading}
-                defaultValue={album}
+                value={alistMountPath}
                 onValueChange={async (value: string) => {
                   setAlistMountPath(value)
                 }}

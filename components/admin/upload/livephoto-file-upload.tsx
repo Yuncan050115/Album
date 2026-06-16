@@ -415,7 +415,7 @@ export default function LivephotoFileUpload() {
             <div className="w-full">
               <Select
                 disabled={isLoading}
-                defaultValue={album}
+                value={alistMountPath}
                 onValueChange={async (value: string) => {
                   setAlistMountPath(value)
                 }}

@@ -8,7 +8,7 @@ import { useTranslations } from 'next-intl'
 import { MasonryPhotoAlbum, RenderImageContext, RenderImageProps } from 'react-photo-album'
 import type { ImageType } from '~/types'
 import { ReloadIcon } from '@radix-ui/react-icons'
-import React, { useEffect, useRef, useCallback } from 'react'
+import React, { useEffect, useRef, useCallback, useMemo } from 'react'
 import BlurImage from '~/components/album/blur-image'
 import { SparklesIcon } from '~/components/icons/sparkles'
 import { UndoIcon } from '~/components/icons/undo'
@@ -41,8 +41,12 @@ export default function TagGallery(props : Readonly<ImageHandleProps>) {
     args: 'system-config',
   }
   const { data: configData } = useSwrHydrated(configProps)
-  const dataList = data ? [].concat(...data) : [];
-  const processedDataList = props.randomShow ? [...dataList].sort(() => Math.random() - 0.5) : dataList;
+  const totalPages = Number(pageTotal) || 0
+  const dataList = useMemo(() => data ? [].concat(...data) : [], [data]);
+  const processedDataList = useMemo(() => {
+    if (!props.randomShow) return dataList
+    return [...dataList].sort(() => Math.random() - 0.5)
+  }, [dataList, props.randomShow])
   const t = useTranslations()
   const router = useRouter()
   const loaderRef = useRef<HTMLDivElement>(null)
@@ -51,10 +55,10 @@ export default function TagGallery(props : Readonly<ImageHandleProps>) {
   const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
     const [entry] = entries;
     // 当加载指示器可见、不在加载中、还有更多内容可加载时，加载更多
-    if (entry.isIntersecting && !isLoading && !isValidating && size < pageTotal) {
+    if (entry.isIntersecting && !isLoading && !isValidating && totalPages > 0 && size < totalPages) {
       setSize(size + 1);
     }
-  }, [isLoading, isValidating, setSize, size, pageTotal]);
+  }, [isLoading, isValidating, setSize, size, totalPages]);
   
   // 设置IntersectionObserver来监视加载指示器元素
   useEffect(() => {
@@ -118,7 +122,7 @@ export default function TagGallery(props : Readonly<ImageHandleProps>) {
       </div>
       <div ref={loaderRef} className="flex items-center justify-center my-4 py-4">
         {isValidating && <ReloadIcon className="h-6 w-6 animate-spin" />}
-        {!isValidating && size >= pageTotal && processedDataList.length > 0 && 
+        {!isValidating && totalPages > 0 && size >= totalPages && processedDataList.length > 0 && 
           <div className="text-sm text-gray-500">已加载全部内容</div>
         }
         {!isValidating && processedDataList.length === 0 && 

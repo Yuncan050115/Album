@@ -2,8 +2,6 @@
 
 import { useButtonStore } from '~/app/providers/button-store-providers'
 import type { ImageType } from '~/types'
-import type { ImageServerHandleProps } from '~/types/props'
-import { useSwrInfiniteServerHook } from '~/hooks/use-swr-infinite-server-hook'
 import React, { useState } from 'react'
 import { toast } from 'sonner'
 import { Switch } from '~/components/ui/switch'
@@ -12,9 +10,7 @@ import { ReloadIcon } from '@radix-ui/react-icons'
 import { Button } from '~/components/ui/button'
 import { Tag, TagInput } from 'emblor'
 
-export default function ImageEditSheet(props : Readonly<ImageServerHandleProps & { pageNum: number } & { album: string }>) {
-  const { pageNum, album, ...restProps } = props
-  const { mutate } = useSwrInfiniteServerHook(restProps, pageNum, album)
+export default function ImageEditSheet(props : Readonly<{ onDone?: () => void | Promise<void> }>) {
   const { imageEdit, image, setImageEdit, setImageEditData } = useButtonStore(
     (state) => state,
   )
@@ -46,7 +42,7 @@ export default function ImageEditSheet(props : Readonly<ImageServerHandleProps &
       toast.success('更新成功！')
       setImageEditData({} as ImageType)
       setImageEdit(false)
-      await mutate()
+      await props.onDone?.()
     } catch (e) {
       toast.error('更新失败！')
     } finally {

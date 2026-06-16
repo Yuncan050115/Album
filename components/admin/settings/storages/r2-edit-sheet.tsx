@@ -9,6 +9,15 @@ import { useSWRConfig } from 'swr'
 import { ReloadIcon } from '@radix-ui/react-icons'
 import { Button } from '~/components/ui/button'
 
+const R2_FIELD_LABELS: Record<string, string> = {
+  r2_accesskey_id: 'Access Key ID',
+  r2_accesskey_secret: 'Secret Access Key',
+  r2_endpoint: 'Endpoint（如 https://<accountid>.r2.cloudflarestorage.com）',
+  r2_bucket: 'Bucket 名称',
+  r2_storage_folder: '存储目录（可空）',
+  r2_public_domain: '公开访问域名/CDN 域名（可空）',
+}
+
 export default function S3EditSheet() {
   const [loading, setLoading] = useState(false)
   const { mutate } = useSWRConfig()
@@ -61,7 +70,7 @@ export default function S3EditSheet() {
                 key={config.id}
                 className="block overflow-hidden rounded-md border border-gray-200 px-3 py-2 shadow-sm focus-within:border-blue-600 focus-within:ring-1 focus-within:ring-blue-600"
               >
-                <span className="text-xs font-medium text-gray-700"> {config.config_key} </span>
+                <span className="text-xs font-medium text-gray-700"> {R2_FIELD_LABELS[config.config_key] || config.config_key} </span>
 
                 <input
                   type="text"
@@ -71,7 +80,7 @@ export default function S3EditSheet() {
                   onChange={(e) => setR2EditData(
                     r2Data?.map((c: Config) => {
                       if (c.config_key === config.config_key) {
-                        c.config_value = e.target.value
+                        return { ...c, config_value: e.target.value }
                       }
                       return c
                     })

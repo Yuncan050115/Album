@@ -2,14 +2,14 @@
 
 'use server'
 
-import { db } from '~/server/lib/db'
+import { db, withDbRetry } from '~/server/lib/db'
 
 /**
  * 获取所有相册列表
  * @returns {Promise<AlbumType[]>} 相册列表
  */
 export async function fetchAlbumsList() {
-  const albums = await db.albums.findMany({
+  const albums = await withDbRetry(() => db.albums.findMany({
     where: {
       del: 0
     },
@@ -24,7 +24,7 @@ export async function fetchAlbumsList() {
         updatedAt: 'desc'
       }
     ]
-  });
+  }), 'albums:list');
 
   // Map random_show to randomShow
   return albums.map(album => ({
@@ -38,7 +38,7 @@ export async function fetchAlbumsList() {
  * @returns {Promise<AlbumType[]>} 相册列表
  */
 export async function fetchAlbumsShow() {
-  return await db.albums.findMany({
+  return await withDbRetry(() => db.albums.findMany({
     where: {
       del: 0,
       show: 0,
@@ -51,7 +51,7 @@ export async function fetchAlbumsShow() {
         sort: 'desc'
       }
     ]
-  });
+  }), 'albums:show');
 }
 
 /**
@@ -59,7 +59,7 @@ export async function fetchAlbumsShow() {
  * @returns {Promise<AlbumType[]>} 相册列表
  */
 export async function fetchAlbumAllList() {
-  return await db.albums.findMany({
+  return await withDbRetry(() => db.albums.findMany({
     where: {
       del: 0
     },
@@ -71,5 +71,5 @@ export async function fetchAlbumAllList() {
         createdAt: 'desc'
       }
     ]
-  });
+  }), 'albums:all');
 }

@@ -25,9 +25,14 @@ export default function Preferences() {
   const [customIndexDownloadEnable, setCustomIndexDownloadEnable] = useState(false)
   const [enablePreviewImageMaxWidthLimit, setPreviewImageMaxWidthLimitEnabled] = useState(false)
   const [previewQualityInput, setPreviewQualityInput] = useState('0.2')
+  const [rssUrl, setRssUrl] = useState('/rss.xml')
   const t = useTranslations()
 
   const { data, isValidating, isLoading } = useSWR<{ config_key: string, config_value: string }[]>('/api/v1/settings/get-custom-info', fetcher)
+
+  useEffect(() => {
+    setRssUrl(`${window.location.origin}/rss.xml`)
+  }, [])
 
   async function updateInfo() {
     const maxWidth = parseInt(previewImageMaxWidth)
@@ -160,13 +165,13 @@ export default function Preferences() {
             <div className="flex items-center space-x-2">
               <Input
                 id="link"
-                defaultValue={window.location.origin + '/rss.xml'}
+                value={rssUrl}
                 readOnly
               />
               <CopyIcon
                 onClick={async () => {
                   try {
-                    const url = window.location.origin + '/rss.xml'
+                    const url = rssUrl
                     // @ts-ignore
                     await navigator.clipboard.writeText(url);
                     toast.success('复制成功！', {duration: 500})

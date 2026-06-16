@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
+import { AUTH_SECRET } from '~/server/auth-secret'
+
+import { listStorageContents } from '~/server/storage/list-storage-contents'
+
 
 export async function POST(req: Request) {
   try {
-    // 验证用户是否登录
-    const token = await getToken({ req })
+    const token = await getToken({ req, secret: AUTH_SECRET })
     if (!token) {
       return NextResponse.json({ code: 401, message: '未授权，请登录' }, { status: 401 })
     }
@@ -16,19 +19,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ code: 400, message: '存储类型不能为空' }, { status: 400 })
     }
 
-    // 调用Hono API获取目录内容
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/hono/storage/browse-directory`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ storage, path, prefix }),
-    })
+    const data = await listStorageContents(storage, path || '', prefix || '')
 
-    const data = await response.json()
-    return NextResponse.json(data)
+    return NextResponse.json({
+      code: 200,
+      message: 'Success',
+      data
+    })
   } catch (error) {
     console.error('浏览目录失败', error)
-    return NextResponse.json({ code: 500, message: '服务器错误' }, { status: 500 })
+    return NextResponse.json({
+      code: 500,
+      message: error instanceof Error ? error.message : '服务器错误'
+    }, { status: 500 })
   }
-} 
+}
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'

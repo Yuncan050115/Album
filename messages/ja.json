@@ -29,7 +29,8 @@
     "password": "パスワード変更",
     "account": "アカウント設定",
     "storages": "ストレージ設定",
-    "authenticator": "二要素認証"
+    "authenticator": "二要素認証",
+    "import": "インポート"
   },
   "Tips": {
     "noImg": "画像がありません",
@@ -51,7 +52,9 @@
     "canal": "キャンセル",
     "delete": "削除",
     "yesDelete": "削除を確認",
-    "goBack": "戻る"
+    "goBack": "戻る",
+    "cancel": "キャンセル",
+    "confirm": "確認"
   },
   "Dashboard": {
     "picData": "写真データ",
@@ -150,5 +153,18 @@
     "inputUsername": "新しいユーザー名を入力してください。",
     "avatar": "アバター",
     "inputAvatar": "アバターをアップロードしてください"
+  },
+  "Import": {
+    "title": "インポート",
+    "selectAlbum": "確認",
+    "noImagesSelected": "No images selected",
+    "importImages": "インポート",
+    "importSuccess": "Imported",
+    "importFailed": "Import failed",
+    "targetAlbum": "Target album",
+    "currentDirectory": "Current directory",
+    "parentDirectory": "Parent directory",
+    "selectImages": "Select images",
+    "selectedImages": "Selected images"
   }
 }

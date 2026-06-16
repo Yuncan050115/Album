@@ -1,83 +1,54 @@
-'use client';
+'use client'
 
-import { motion, useTransform, MotionValue, useSpring } from 'framer-motion';
-import { useTheme } from 'next-themes';
-import { useMouseStore } from '~/components/SiteEssentials';
-import { useEffect, useState } from 'react';
+import * as React from 'react'
+import { useTheme } from 'next-themes'
+
+const ADMIN_BG_URL = 'https://pic.rmb.bdstatic.com/bjh/ebe942a9de49856f389c65f25a338335.png'
 
 export function AdminBackground() {
-    const { resolvedTheme } = useTheme();
-    const { position, velocity } = useMouseStore();
-    // 创建MotionValues用于跟踪鼠标位置
-    const [mouseX] = useState(() => new MotionValue(0));
-    const [mouseY] = useState(() => new MotionValue(0));
-    // 使用指定的背景图片
-    const bgUrl = 'https://pic.rmb.bdstatic.com/bjh/ebe942a9de49856f389c65f25a338335.png';
-    const [windowSize, setWindowSize] = useState<[number, number]>([1, 1]);
+  const { resolvedTheme } = useTheme()
+  const [loaded, setLoaded] = React.useState(false)
+  const isDark = resolvedTheme === 'dark'
+  const enableRemoteBackground = process.env.NEXT_PUBLIC_ENABLE_ADMIN_BACKGROUND === 'true'
 
-    // 更新鼠标位置的MotionValue
-    useEffect(() => {
-        mouseX.set(position[0]);
-        mouseY.set(position[1]);
-    }, [position, mouseX, mouseY]);
+  React.useEffect(() => {
+    if (!enableRemoteBackground) {
+      setLoaded(false)
+      return
+    }
 
-    // 窗口大小变化时更新
-    useEffect(() => {
-        const updateSize = () => {
-            setWindowSize([window.innerWidth, window.innerHeight]);
-        };
-        
-        // 初始化
-        updateSize();
-        
-        window.addEventListener('resize', updateSize);
-        return () => window.removeEventListener('resize', updateSize);
-    }, []);
+    let cancelled = false
+    const image = new Image()
+    image.decoding = 'async'
+    image.loading = 'lazy'
+    image.onload = () => {
+      if (!cancelled) setLoaded(true)
+    }
+    image.onerror = () => {
+      if (!cancelled) setLoaded(false)
+    }
+    const timeoutId = window.setTimeout(() => { image.src = ADMIN_BG_URL }, 1200)
 
-    // 创建平滑的背景偏移量
-    const offsetX = useTransform(mouseX, (x) => {
-        return (x / windowSize[0] - 0.5) * 10;
-    });
-    
-    const offsetY = useTransform(mouseY, (y) => {
-        return (y / windowSize[1] - 0.5) * 10;
-    });
+    return () => {
+      cancelled = true
+      window.clearTimeout(timeoutId)
+    }
+  }, [enableRemoteBackground])
 
-    // 平滑的模糊效果
-    const blurValue = useTransform(() => Math.min(8 + velocity * 0.3, 12));
-    const springBlur = useSpring(blurValue, { damping: 20, stiffness: 200 });
-    
-    // 平滑的缩放效果
-    const scaleValue = useTransform(() => 1 + Math.min(velocity * 0.001, 0.05));
-    const springScale = useSpring(scaleValue, { damping: 25, stiffness: 150 });
-
-    // 根据主题设置蒙版颜色
-    const overlayBackground = resolvedTheme === 'dark' 
-        ? 'rgba(10, 10, 20, 0.65)' 
-        : 'rgba(255, 255, 255, 0.4)';
-
-    return (
-        <motion.div
-            className="fixed inset-0 z-[-1] overflow-hidden"
-            style={{
-                backgroundImage: `url(${bgUrl})`,
-                backgroundPosition: 'center',
-                backgroundSize: 'cover',
-                opacity: 0.8,
-                filter: 'saturate(110%) contrast(105%)',
-                x: offsetX,
-                y: offsetY,
-                scale: springScale,
-            }}
-        >
-            <motion.div
-                className="absolute inset-0"
-                style={{
-                    backdropFilter: `blur(${springBlur}px)`,
-                    background: overlayBackground
-                }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent" />
-        </motion.div>
-    );
-} 
+  return (
+    <div className="fixed inset-0 z-[-1] overflow-hidden bg-background">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(99,102,241,0.13),transparent_30%),radial-gradient(circle_at_84%_6%,rgba(236,72,153,0.10),transparent_26%),linear-gradient(135deg,rgba(248,250,252,0.90),rgba(226,232,240,0.72))] dark:bg-[radial-gradient(circle_at_18%_12%,rgba(99,102,241,0.18),transparent_34%),radial-gradient(circle_at_84%_6%,rgba(236,72,153,0.12),transparent_30%),linear-gradient(135deg,rgba(2,6,23,0.95),rgba(15,23,42,0.88))]" />
+      <div
+        aria-hidden
+        className="absolute inset-[-16px] bg-center bg-cover opacity-0 transition-opacity duration-700"
+        style={{
+          backgroundImage: loaded ? `url(${ADMIN_BG_URL})` : undefined,
+          opacity: loaded ? 0.26 : 0,
+          filter: `${isDark ? 'brightness(0.55)' : 'brightness(1.02)'} saturate(102%) contrast(100%) blur(8px)`
+        }}
+      />
+      <div className="absolute inset-0 bg-background/70 dark:bg-background/78 backdrop-blur-[4px]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-transparent to-background/90" />
+    </div>
+  )
+}

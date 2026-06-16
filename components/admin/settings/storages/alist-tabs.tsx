@@ -19,6 +19,18 @@ import React, { useState } from 'react'
 import AlistEditSheet from '~/components/admin/settings/storages/alist-edit-sheet'
 import { Badge } from '~/components/ui/badge'
 
+const ALIST_CONFIG_FALLBACK = [
+  { id: 'alist_url', config_key: 'alist_url', config_value: '', detail: 'AList / OpenList 地址' },
+  { id: 'alist_token', config_key: 'alist_token', config_value: '', detail: 'AList / OpenList Token' },
+]
+
+async function readJsonResponse(res: Response) {
+  const text = await res.text()
+  try { return text ? JSON.parse(text) : {} }
+  catch { return { code: res.status || 500, message: text || `HTTP ${res.status}` } }
+}
+
+
 export default function AlistTabs() {
   const [connectionLoading, setConnectionLoading] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'unconfigured' | null>(null)
@@ -53,13 +65,13 @@ export default function AlistTabs() {
     setConnectionStatus(null)
     
     try {
-      const res = await fetch('/api/v1/storage/test-connection', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ storage: 'alist' })
-      }).then(res => res.json())
+      const response = await fetch('/api/v1/storage/alist/storages', {
+        method: 'GET',
+        cache: 'no-store'
+      })
+      const res = await readJsonResponse(response)
       
-      if (res?.code === 200) {
+      if (response.ok && (res?.code === 200 || Array.isArray(res?.data) || Array.isArray(res?.data?.content))) {
         toast.success('AList连接成功')
         setConnectionStatus('connected')
       } else {
@@ -126,8 +138,9 @@ export default function AlistTabs() {
               variant="outline"
               className="cursor-pointer"
               onClick={() => {
+                const rows = Array.isArray(data) ? data : ALIST_CONFIG_FALLBACK
+                setAListEditData(rows.map((item: any) => ({ ...item })))
                 setAListEdit(true)
-                setAListEditData(JSON.parse(JSON.stringify(data)))
               }}
               aria-label="编辑"
             >
@@ -137,7 +150,7 @@ export default function AlistTabs() {
         </div>
       </Card>
       {
-        data &&
+        Array.isArray(data) &&
         <Card className="p-2">
           <Table aria-label="Alist 设置">
             <TableHeader>
@@ -157,7 +170,7 @@ export default function AlistTabs() {
           </Table>
         </Card>
       }
-      {Array.isArray(data) && data.length > 0 && <AlistEditSheet />}
+      <AlistEditSheet />
     </div>
   )
 }

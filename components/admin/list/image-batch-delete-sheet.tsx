@@ -1,12 +1,11 @@
 'use client'
 
 import type { ImageType } from '~/types'
-import type { ImageListDataProps, ImageServerHandleProps } from '~/types/props'
+import type { ImageListDataProps } from '~/types/props'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '~/components/ui/sheet'
 import React, { useState } from 'react'
 import { useButtonStore } from '~/app/providers/button-store-providers'
 import { toast } from 'sonner'
-import { useSwrInfiniteServerHook } from '~/hooks/use-swr-infinite-server-hook'
 import { Checkbox } from '~/components/ui/checkbox'
 import {
   Avatar,
@@ -25,9 +24,8 @@ import {
 } from '~/components/ui/dialog'
 import { Label } from '~/components/ui/label'
 
-export default function ImageBatchDeleteSheet(props : Readonly<ImageServerHandleProps & { dataProps: ImageListDataProps } & { pageNum: number } & { album: string }>) {
-  const { dataProps, pageNum, album, ...restProps } = props
-  const { mutate } = useSwrInfiniteServerHook(restProps, pageNum, album)
+export default function ImageBatchDeleteSheet(props : Readonly<{ dataProps: ImageListDataProps, onDone?: () => void | Promise<void> }>) {
+  const { dataProps } = props
   const { imageBatchDelete, setImageBatchDelete } = useButtonStore(
     (state) => state,
   )
@@ -51,7 +49,7 @@ export default function ImageBatchDeleteSheet(props : Readonly<ImageServerHandle
       toast.success('删除成功！')
       setImageBatchDelete(false)
       setData([])
-      await mutate()
+      await props.onDone?.()
     } catch (e) {
       toast.error('删除失败！')
     } finally {

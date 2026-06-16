@@ -4,66 +4,22 @@ import type { AlbumDataProps } from '~/types/props'
 import HeaderIconGroup from '~/components/layout/header-icon-group'
 
 export default async function Header(props: Readonly<AlbumDataProps>) {
-    return (
-        <div
-            className="flex items-center w-full p-2 sm:w-[70%] mx-auto sticky top-0 z-50
-      rounded-2xl
-      bg-[hsl(0_0%_100%/0.8)]  // 亮色模式基础
-      dark:bg-[hsl(240_5%_7%/0.95)] // 精准暗色 HSL 值
-      shadow-[0_10px_30px_hsl(240_10%_3.9%/0.1)]
-      dark:shadow-[0_10px_30px_hsl(0_0%_98%/0.03)] // 阴影透明度调整
-      border border-gray-100/50
-      dark:border-gray-800
-      transition-all duration-500
-      hover:shadow-[0_15px_40px_hsl(240_10%_3.9%/0.15)]
-      dark:hover:shadow-[0_15px_40px_hsl(0_0%_98%/0.05)]
-      hover:-translate-y-[2px] group overflow-hidden
-      backdrop-blur-xl  // 单独声明模糊层
-      before:absolute before:inset-0 before:-z-1  // 隔离背景层
-      before:bg-[radial-gradient(circle_at_50%_-20%,hsl(263.4_70%_50.4%/0.1),transparent_60%)]
-      dark:before:bg-[radial-gradient(circle_at_50%_-20%,hsl(263.4_70%_50.4%/0.2),transparent_70%)]"
-            style={{
-                willChange: 'transform, background-color, box-shadow',
-                transform: 'translateZ(0)',
-            }}
-        >
-            {/* Logo 区域 */}
-            <div className="justify-start relative z-20">
-                <Logo/>
-            </div>
-
-            {/* 中间区域 */}
-            <div className="flex gap-1 flex-1 select-none justify-center w-full">
-                <h1 className="font-moqugufeng 
-    text-xl      // 移动端基准
-    xs:text-2xl   // 超小屏
-    sm:text-[1.35rem] // 小屏
-    md:text-2xl   // 中屏
-    lg:text-3xl   // 大屏
-    tracking-[0.15em]  // 调整字间距
-    sm:tracking-[0.2em]
-    leading-[1.4] 
-    sm:leading-[1.8]
-    break-keep    // 防止文字换行
-    px-1          // 增加左右内边距
-    [word-spacing:-0.05em]  // 微调字间距
-    [font-family:var(--font-moqugufeng)]">
-    云笺藏霁月 镜底锁烟霞
-  </h1>
-            </div>
-
-            {/* 图标组 */}
-            <div className="flex h-full items-center space-x-2 justify-end relative z-20">
-                <HeaderIconGroup {...props} />
-            </div>
-
-            {/* 动态光效层 (优化版) */}
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-30 transition-opacity
-        bg-[radial-gradient(circle_at_50%_-20%,hsl(0_0%_100%/0.4)_15%,transparent_70%)]
-        dark:bg-[radial-gradient(circle_at_50%_-20%,hsl(263.4_70%_50.4%/0.3)_10%,transparent_70%)]
-        mix-blend-mode-screen
-        pointer-events-none z-10"
-            />
+  return (
+    <header className="sticky top-3 z-50 mx-auto mt-3 w-[min(1160px,calc(100vw-1.25rem))] px-0">
+      <div className="interactive-surface group relative flex min-h-[4.65rem] items-center overflow-visible rounded-[2.25rem] border border-white/22 bg-white/[0.075] px-3 py-3 shadow-[0_18px_65px_rgba(15,23,42,0.055)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/[0.12] dark:border-white/8 dark:bg-black/[0.075] dark:shadow-[0_18px_65px_rgba(0,0,0,0.18)] dark:hover:bg-black/[0.12] sm:px-5">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_-18%,rgba(255,255,255,0.34),transparent_42%),linear-gradient(135deg,rgba(255,255,255,0.08),transparent_55%,rgba(255,255,255,0.05))] opacity-55 dark:bg-[radial-gradient(circle_at_50%_-18%,rgba(168,85,247,0.13),transparent_44%),linear-gradient(135deg,rgba(255,255,255,0.04),transparent_55%,rgba(236,72,153,0.04))]" />
+        <div className="relative z-10 hidden shrink-0 sm:block">
+          <Logo />
         </div>
-    )
+        <div className="relative z-10 flex min-w-0 flex-1 justify-center px-2 text-center sm:px-4">
+          <h1 className="font-moqugufeng truncate py-1 text-[1.52rem] leading-[1.28] tracking-[0.22em] text-slate-950/86 drop-shadow-[0_1px_12px_rgba(255,255,255,0.48)] dark:text-white/88 dark:drop-shadow-[0_1px_18px_rgba(168,85,247,0.26)] sm:text-3xl md:text-[2rem]">
+            云笺藏霁月 镜底锁烟霞
+          </h1>
+        </div>
+        <div className="relative z-10 flex shrink-0 items-center justify-end">
+          <HeaderIconGroup {...props} />
+        </div>
+      </div>
+    </header>
+  )
 }

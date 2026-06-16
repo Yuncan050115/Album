@@ -13,7 +13,12 @@ export default async function DefaultLayout({
     return await fetchAlbumsShow()
   }
 
-  const data: AlbumType[] = await getData()
+  let data: AlbumType[] = []
+  try {
+    data = await getData()
+  } catch (error) {
+    console.warn('header album fallback:', error)
+  }
 
   const props: AlbumDataProps = {
     data: data

@@ -3,7 +3,6 @@
 import { LazyLoadImage } from 'react-lazy-load-image-component'
 import 'react-lazy-load-image-component/src/effects/blur.css'
 import type { ImageType } from '~/types'
-import * as React from 'react'
 import { CameraIcon } from '~/components/icons/camera'
 import { ApertureIcon } from '~/components/icons/aperture'
 import { TimerIcon } from '~/components/icons/timer'
@@ -22,236 +21,9 @@ import { ClockIcon } from '~/components/icons/clock'
 import dayjs from 'dayjs'
 import { Badge } from '~/components/ui/badge'
 import { useRouter } from 'next-nprogress-bar'
-import { useRef, useEffect, useCallback, useState } from 'react'
-import gsap from 'gsap'
-
-// 节流函数，限制函数调用频率
-function throttle(func: Function, limit: number) {
-  let inThrottle: boolean
-  let lastFunc: ReturnType<typeof setTimeout>
-  let lastTime: number
-  
-  return function(this: any, ...args: any[]) {
-    const context = this
-    
-    if (!inThrottle) {
-      func.apply(context, args)
-      lastTime = Date.now()
-      inThrottle = true
-    } else {
-      clearTimeout(lastFunc)
-      lastFunc = setTimeout(() => {
-        if (Date.now() - lastTime >= limit) {
-          func.apply(context, args)
-          lastTime = Date.now()
-        }
-      }, Math.max(limit - (Date.now() - lastTime), 0))
-    }
-  }
-}
 
 export default function GalleryImage({ photo, configData }: { photo: ImageType, configData: any }) {
   const router = useRouter()
-  const imgRef = useRef<HTMLDivElement>(null)
-  const [isHovered, setIsHovered] = useState(false)
-
-  useEffect(() => {
-    const element = imgRef.current
-    if (!element) return
-
-    // 移动设备检测
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-    
-    // 创建主动画控制器
-    const animation = gsap.timeline({ paused: true })
-      .to(element, {
-        scale: 1.03,
-        boxShadow: '0 22px 35px rgba(0, 0, 0, 0.20)',
-        filter: 'contrast(1.05) brightness(1.05)',
-        transform: 'translateZ(50px)',
-        duration: 0.4,
-        ease: 'expo.out'
-      })
-    
-    // 创建持续浮动动画
-    const floatAnimation = gsap.timeline({ 
-      paused: true,
-      repeat: -1,
-      yoyo: true,
-      repeatDelay: 0.1
-    }).to(element, {
-      y: '-=8',
-      duration: 1.2,
-      ease: 'sine.inOut'
-    })
-    
-    // 光效动画
-    const glowElement = document.createElement('div')
-    glowElement.className = 'absolute inset-0 opacity-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent rounded-md z-10 pointer-events-none'
-    gsap.set(glowElement, { opacity: 0 })
-    element.appendChild(glowElement)
-    
-    const glowAnimation = gsap.timeline({ 
-      paused: true,
-      repeat: -1,
-      yoyo: true,
-      repeatDelay: 0.3
-    }).to(glowElement, {
-      opacity: 0.8,
-      duration: 1.5,
-      ease: 'sine.inOut'
-    })
-    
-    // 闪光效果
-    const flashElement = document.createElement('div')
-    flashElement.className = 'absolute inset-0 opacity-0 bg-white/40 rounded-md z-20 pointer-events-none'
-    element.appendChild(flashElement)
-    
-    // 鼠标位置跟踪变量
-    let mouseX = 0
-    let mouseY = 0
-    let lastMouseX = 0
-    let lastMouseY = 0
-    let velocityX = 0
-    let velocityY = 0
-    let rafId: number | null = null
-    
-    function updatePosition() {
-      if (!isHovered || isMobile) return
-      
-      // 计算鼠标速度
-      velocityX = (mouseX - lastMouseX) * 0.05
-      velocityY = (mouseY - lastMouseY) * 0.05
-      
-      // 限制速度范围
-      velocityX = Math.min(Math.max(velocityX, -5), 5)
-      velocityY = Math.min(Math.max(velocityY, -5), 5)
-      
-      // 保存上一帧鼠标位置
-      lastMouseX = mouseX
-      lastMouseY = mouseY
-      
-      // 应用倾斜和光效
-      gsap.to(element, {
-        rotationY: velocityX * 1.5,
-        rotationX: -velocityY * 1.5,
-        duration: 0.2,
-        ease: 'power1.out',
-        overwrite: true
-      })
-      
-      gsap.to(glowElement, {
-        backgroundPosition: `${50 + velocityX * 10}% ${50 + velocityY * 10}%`,
-        duration: 0.2,
-        ease: 'power1.out',
-        overwrite: true
-      })
-      
-      rafId = requestAnimationFrame(updatePosition)
-    }
-    
-    // 闪光动画函数
-    function playFlashAnimation() {
-      // 重置闪光元素状态
-      gsap.set(flashElement, { opacity: 0 })
-      
-      // 创建闪光动画
-      gsap.timeline()
-        .to(flashElement, {
-          opacity: 0.8,
-          duration: 0.2,
-          ease: 'power1.in'
-        })
-        .to(flashElement, {
-          opacity: 0,
-          duration: 0.4,
-          ease: 'power2.out'
-        })
-    }
-    
-    // 鼠标进入事件
-    const handleMouseEnter = () => {
-      setIsHovered(true)
-      animation.play()
-      floatAnimation.play()
-      glowAnimation.play()
-      // 触发闪光效果
-      playFlashAnimation()
-      rafId = requestAnimationFrame(updatePosition)
-    }
-    
-    // 鼠标移动事件
-    const handleMouseMove = (e: MouseEvent) => {
-      if (isMobile) return
-      
-      const rect = element.getBoundingClientRect()
-      // 计算鼠标在元素内的相对位置 (0,0)为中心点
-      mouseX = ((e.clientX - rect.left) / rect.width - 0.5) * 2 
-      mouseY = ((e.clientY - rect.top) / rect.height - 0.5) * 2
-    }
-    
-    // 鼠标离开事件
-    const handleMouseLeave = () => {
-      setIsHovered(false)
-      
-      // 停止持续动画
-      floatAnimation.pause(0)
-      glowAnimation.pause(0)
-      
-      // 恢复原始状态
-      gsap.to(element, {
-        scale: 1,
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-        filter: 'contrast(1) brightness(1)',
-        rotationY: 0,
-        rotationX: 0,
-        transform: 'translateZ(0px)',
-        y: 0,
-        duration: 0.5,
-        ease: 'power3.out'
-      })
-      
-      // 隐藏光效
-      gsap.to(glowElement, {
-        opacity: 0,
-        duration: 0.3,
-        ease: 'power1.in'
-      })
-      
-      // 取消动画帧
-      if (rafId) {
-        cancelAnimationFrame(rafId)
-        rafId = null
-      }
-    }
-    
-    // 添加事件监听
-    element.addEventListener('mouseenter', handleMouseEnter, { passive: true })
-    element.addEventListener('mousemove', handleMouseMove, { passive: true })
-    element.addEventListener('mouseleave', handleMouseLeave, { passive: true })
-    
-    // 清理函数
-    return () => {
-      if (rafId) cancelAnimationFrame(rafId)
-      element.removeEventListener('mouseenter', handleMouseEnter)
-      element.removeEventListener('mousemove', handleMouseMove)
-      element.removeEventListener('mouseleave', handleMouseLeave)
-      
-      // 移除创建的DOM元素
-      if (element.contains(glowElement)) {
-        element.removeChild(glowElement)
-      }
-      if (element.contains(flashElement)) {
-        element.removeChild(flashElement)
-      }
-      
-      // 清理动画
-      animation.kill()
-      floatAnimation.kill()
-      glowAnimation.kill()
-    }
-  }, [])
-
   const exifIconClass = 'dark:text-gray-50 text-gray-500'
   const exifTextClass = 'text-tiny text-sm select-none items-center dark:text-gray-50 text-gray-500'
 
@@ -312,22 +84,14 @@ export default function GalleryImage({ photo, configData }: { photo: ImageType, 
         </article>
       </div>
       <div
-        className={`show-up-motion relative inline-block select-none sm:w-[66.667%] mx-auto shadow-gray-200 dark:shadow-gray-800 rounded-md overflow-hidden ${isHovered ? 'z-10' : ''}`}
-        ref={imgRef}
-        style={{ 
-          transformStyle: 'preserve-3d', 
-          perspective: '800px',
-          transformOrigin: 'center center',
-          willChange: 'transform',
-          transition: 'z-index 0.2s'
-        }}
+        className="interactive-surface relative inline-block select-none sm:w-[66.667%] mx-auto rounded-xl overflow-hidden shadow-sm shadow-gray-200/80 dark:shadow-black/30"
       >
         <LazyLoadImage
           width={photo.width}
           height={photo.height}
-          src={photo.url}
-          alt={photo.title}
-          effect="blur"
+          src={photo.preview_url || photo.url}
+          alt={photo.title || photo.detail || 'photo'}
+          effect="opacity"
           wrapperProps={{
             style: {
               width: '100%',

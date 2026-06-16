@@ -1,8 +1,8 @@
 // 配置表
 
-'use server'
+"use server";
 
-import { db } from '~/server/lib/db'
+import { db } from "~/server/lib/db";
 
 /**
  * 更新 S3 配置
@@ -25,7 +25,7 @@ export async function updateS3Config(configs: any) {
     END,
         updated_at = NOW()
     WHERE config_key IN ('accesskey_id', 'accesskey_secret', 'region', 'endpoint', 'bucket', 'storage_folder', 'force_path_style', 's3_cdn', 's3_cdn_url');
-  `
+  `;
 }
 
 /**
@@ -33,20 +33,23 @@ export async function updateS3Config(configs: any) {
  * @param configs 配置信息
  */
 export async function updateR2Config(configs: any) {
-  return await db.$executeRaw`
-    UPDATE "public"."configs"
-    SET config_value = CASE
-       WHEN config_key = 'r2_accesskey_id' THEN ${configs.r2AccesskeyId}
-       WHEN config_key = 'r2_accesskey_secret' THEN ${configs.r2AccesskeySecret}
-       WHEN config_key = 'r2_endpoint' THEN ${configs.r2Endpoint}
-       WHEN config_key = 'r2_bucket' THEN ${configs.r2Bucket}
-       WHEN config_key = 'r2_storage_folder' THEN ${configs.r2StorageFolder}
-       WHEN config_key = 'r2_public_domain' THEN ${configs.r2PublicDomain}
-       ELSE 'N&A'
-    END,
-        updated_at = NOW()
-    WHERE config_key IN ('r2_accesskey_id', 'r2_accesskey_secret', 'r2_endpoint', 'r2_bucket', 'r2_storage_folder', 'r2_public_domain');
-  `
+  const entries = [
+    ["r2_accesskey_id", configs.r2AccesskeyId || "", "Cloudflare R2 Access Key ID"],
+    ["r2_accesskey_secret", configs.r2AccesskeySecret || "", "Cloudflare R2 Secret Access Key"],
+    ["r2_endpoint", configs.r2Endpoint || "", "R2 S3 API Endpoint"],
+    ["r2_bucket", configs.r2Bucket || "", "R2 Bucket 名称"],
+    ["r2_storage_folder", configs.r2StorageFolder || "", "存储目录，可空"],
+    ["r2_public_domain", configs.r2PublicDomain || "", "公开访问域名/CDN 域名，可空"],
+  ] as const;
+
+  for (const [config_key, config_value, detail] of entries) {
+    await db.configs.upsert({
+      where: { config_key },
+      update: { config_value, detail, updatedAt: new Date() },
+      create: { config_key, config_value, detail },
+    });
+  }
+  return { count: entries.length };
 }
 
 /**
@@ -63,7 +66,7 @@ export async function updateAListConfig(configs: any) {
     END,
         updated_at = NOW()
     WHERE config_key IN ('alist_url', 'alist_token');
-  `
+  `;
 }
 
 /**
@@ -71,16 +74,16 @@ export async function updateAListConfig(configs: any) {
  * @param payload 自定义信息
  */
 export async function updateCustomInfo(payload: {
-  title: string
-  customFaviconUrl: string
-  customAuthor: string
-  feedId: string
-  userId: string
-  customIndexStyle: number
-  customIndexDownloadEnable: boolean
-  enablePreviewImageMaxWidthLimit: boolean
-  previewImageMaxWidth: number
-  previewQuality: number
+  title: string;
+  customFaviconUrl: string;
+  customAuthor: string;
+  feedId: string;
+  userId: string;
+  customIndexStyle: number;
+  customIndexDownloadEnable: boolean;
+  enablePreviewImageMaxWidthLimit: boolean;
+  previewImageMaxWidth: number;
+  previewQuality: number;
 }) {
   const {
     title,
@@ -93,103 +96,103 @@ export async function updateCustomInfo(payload: {
     enablePreviewImageMaxWidthLimit,
     previewImageMaxWidth,
     previewQuality,
-  } = payload
+  } = payload;
   await db.$transaction(async (tx) => {
     await tx.configs.update({
       where: {
-        config_key: 'custom_title'
+        config_key: "custom_title",
       },
       data: {
         config_value: title,
-        updatedAt: new Date()
-      }
-    })
+        updatedAt: new Date(),
+      },
+    });
     await tx.configs.update({
       where: {
-        config_key: 'custom_favicon_url'
+        config_key: "custom_favicon_url",
       },
       data: {
         config_value: customFaviconUrl,
-        updatedAt: new Date()
-      }
-    })
+        updatedAt: new Date(),
+      },
+    });
     await tx.configs.update({
       where: {
-        config_key: 'custom_author'
+        config_key: "custom_author",
       },
       data: {
         config_value: customAuthor,
-        updatedAt: new Date()
-      }
-    })
+        updatedAt: new Date(),
+      },
+    });
     await tx.configs.update({
       where: {
-        config_key: 'rss_feed_id'
+        config_key: "rss_feed_id",
       },
       data: {
         config_value: feedId,
-        updatedAt: new Date()
-      }
-    })
+        updatedAt: new Date(),
+      },
+    });
     await tx.configs.update({
       where: {
-        config_key: 'rss_user_id'
+        config_key: "rss_user_id",
       },
       data: {
         config_value: userId,
-        updatedAt: new Date()
-      }
-    })
+        updatedAt: new Date(),
+      },
+    });
     await tx.configs.update({
       where: {
-        config_key: 'custom_index_style'
+        config_key: "custom_index_style",
       },
       data: {
         config_value: customIndexStyle.toString(),
-        updatedAt: new Date()
-      }
-    })
+        updatedAt: new Date(),
+      },
+    });
     await tx.configs.update({
       where: {
-        config_key: 'custom_index_download_enable'
+        config_key: "custom_index_download_enable",
       },
       data: {
-        config_value: customIndexDownloadEnable ? 'true' : 'false',
+        config_value: customIndexDownloadEnable ? "true" : "false",
         updatedAt: new Date(),
-      }
-    })
+      },
+    });
     await tx.configs.update({
       where: {
-        config_key: 'preview_max_width_limit_switch'
+        config_key: "preview_max_width_limit_switch",
       },
       data: {
-        config_value: enablePreviewImageMaxWidthLimit ? '1' : '0',
+        config_value: enablePreviewImageMaxWidthLimit ? "1" : "0",
         updatedAt: new Date(),
-      }
-    })
+      },
+    });
     if (previewImageMaxWidth > 0) {
       await tx.configs.update({
         where: {
-          config_key: 'preview_max_width_limit'
+          config_key: "preview_max_width_limit",
         },
         data: {
           config_value: previewImageMaxWidth.toString(),
           updatedAt: new Date(),
-        }
-      })
+        },
+      });
     }
     if (previewQuality > 0) {
       await tx.configs.update({
         where: {
-          config_key: 'preview_quality'
+          config_key: "preview_quality",
         },
         data: {
           config_value: previewQuality.toString(),
           updatedAt: new Date(),
-        }
-      })
+        },
+      });
     }
-  })
+  });
 }
 
 /**
@@ -199,13 +202,13 @@ export async function updateCustomInfo(payload: {
 export async function saveAuthTemplateSecret(token: string) {
   await db.configs.update({
     where: {
-      config_key: 'auth_temp_secret'
+      config_key: "auth_temp_secret",
     },
     data: {
       config_value: token,
-      updatedAt: new Date()
-    }
-  })
+      updatedAt: new Date(),
+    },
+  });
 }
 
 /**
@@ -217,23 +220,23 @@ export async function saveAuthSecret(enable: string, secret: string) {
   await db.$transaction(async (tx) => {
     await tx.configs.update({
       where: {
-        config_key: 'auth_enable'
+        config_key: "auth_enable",
       },
       data: {
         config_value: enable,
-        updatedAt: new Date()
-      }
-    })
+        updatedAt: new Date(),
+      },
+    });
     await tx.configs.update({
       where: {
-        config_key: 'auth_secret'
+        config_key: "auth_secret",
       },
       data: {
         config_value: secret,
-        updatedAt: new Date()
-      }
-    })
-  })
+        updatedAt: new Date(),
+      },
+    });
+  });
 }
 
 /**
@@ -243,39 +246,39 @@ export async function deleteAuthSecret() {
   await db.$transaction(async (tx) => {
     await tx.configs.update({
       where: {
-        config_key: 'auth_enable'
+        config_key: "auth_enable",
       },
       data: {
-        config_value: 'false',
-        updatedAt: new Date()
-      }
-    })
+        config_value: "false",
+        updatedAt: new Date(),
+      },
+    });
     await tx.configs.update({
       where: {
-        config_key: 'auth_secret'
+        config_key: "auth_secret",
       },
       data: {
-        config_value: '',
-        updatedAt: new Date()
-      }
-    })
+        config_value: "",
+        updatedAt: new Date(),
+      },
+    });
     await tx.configs.update({
       where: {
-        config_key: 'auth_temp_secret'
+        config_key: "auth_temp_secret",
       },
       data: {
-        config_value: '',
-        updatedAt: new Date()
-      }
-    })
-  })
+        config_value: "",
+        updatedAt: new Date(),
+      },
+    });
+  });
 }
 
 /**
- * 更新腾讯云COS配置
- * @param cosConfig 腾讯云COS配置信息
+ * 更新腾讯云 COS 配置。
+ * 这里不能只 UPDATE，因为旧库里如果缺少 COS 配置行，前端会看起来“保存成功”但实际没有写入。
  */
-export async function updateCosConfig(cosConfig: { 
+export async function updateCosConfig(cosConfig: {
   cosSecretId: string;
   cosSecretKey: string;
   cosRegion: string;
@@ -283,18 +286,37 @@ export async function updateCosConfig(cosConfig: {
   cosStorageFolder: string;
   cosDomain: string;
 }) {
-  return await db.$executeRaw`
-    UPDATE "public"."configs"
-    SET config_value = CASE
-       WHEN config_key = 'cos_secret_id' THEN ${cosConfig.cosSecretId}
-       WHEN config_key = 'cos_secret_key' THEN ${cosConfig.cosSecretKey}
-       WHEN config_key = 'cos_region' THEN ${cosConfig.cosRegion}
-       WHEN config_key = 'cos_bucket' THEN ${cosConfig.cosBucket}
-       WHEN config_key = 'cos_storage_folder' THEN ${cosConfig.cosStorageFolder}
-       WHEN config_key = 'cos_domain' THEN ${cosConfig.cosDomain}
-       ELSE 'N&A'
-    END,
-        updated_at = NOW()
-    WHERE config_key IN ('cos_secret_id', 'cos_secret_key', 'cos_region', 'cos_bucket', 'cos_storage_folder', 'cos_domain');
-  `
+  const entries = [
+    ["cos_secret_id", cosConfig.cosSecretId, "腾讯云 COS SecretId"],
+    ["cos_secret_key", cosConfig.cosSecretKey, "腾讯云 COS SecretKey"],
+    [
+      "cos_region",
+      cosConfig.cosRegion,
+      "腾讯云 COS 地域，如：ap-guangzhou / ap-hongkong",
+    ],
+    [
+      "cos_bucket",
+      cosConfig.cosBucket,
+      "腾讯云 COS 存储桶完整名称，如：yuncan-125xxxxxxx",
+    ],
+    [
+      "cos_storage_folder",
+      cosConfig.cosStorageFolder,
+      "腾讯云 COS 存储目录，填 / 或留空表示根目录",
+    ],
+    [
+      "cos_domain",
+      cosConfig.cosDomain,
+      "腾讯云 COS 自定义域名 / CDN 域名，可留空",
+    ],
+  ] as const;
+
+  for (const [config_key, config_value, detail] of entries) {
+    await db.configs.upsert({
+      where: { config_key },
+      update: { config_value, detail, updatedAt: new Date() },
+      create: { config_key, config_value, detail },
+    });
+  }
+  return { count: entries.length };
 }

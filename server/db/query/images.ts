@@ -2,8 +2,8 @@
 
 'use server'
 
-import { Prisma } from '@prisma/client'
-import { db } from '~/server/lib/db'
+import { Prisma } from '~/server/generated/prisma/client'
+import { db, withDbRetry } from '~/server/lib/db'
 import type { ImageType } from '~/types'
 
 const ALBUM_IMAGE_SORTING_ORDER = [
@@ -20,51 +20,47 @@ const ALBUM_IMAGE_SORTING_ORDER = [
  * @param album 相册
  * @returns {Promise<[ImageType]>} 图片列表
  */
-export async function fetchServerImagesListByAlbum(pageNum: number, album: string) {
-  if (album === 'all') {
-    album = ''
-  }
-  if (pageNum < 1) {
-    pageNum = 1
-  }
-  if (album && album !== '') {
-    return await db.$queryRaw`
-      SELECT 
-          image.*,
-          albums.name AS album_name,
-          albums.id AS album_value
-      FROM 
-          "public"."images" AS image
-      INNER JOIN "public"."images_albums_relation" AS relation
-          ON image.id = relation."imageId"
-      INNER JOIN "public"."albums" AS albums
-          ON relation.album_value = albums.album_value
-      WHERE
-          image.del = 0
-      AND
-          albums.del = 0
-      AND
-          albums.album_value = ${album}
-      ORDER BY image.sort DESC, image.created_at DESC, image.updated_at DESC
-      LIMIT 8 OFFSET ${(pageNum - 1) * 8}
-    `;
-  }
-  return await db.$queryRaw`
-    SELECT 
+export async function fetchServerImagesListByAlbum(pageNum: number, album: string, pageSize = 48) {
+  pageSize = Math.min(Math.max(Number(pageSize) || 48, 12), 96)
+  if (album === 'all') album = ''
+  if (pageNum < 1) pageNum = 1
+  const offset = (pageNum - 1) * pageSize
+
+  if (album) {
+    return await withDbRetry(() => db.$queryRaw`
+      SELECT
         image.*,
-        albums.name AS album_name,
-        albums.id AS album_value
-    FROM 
-        "public"."images" AS image
-    LEFT JOIN "public"."images_albums_relation" AS relation
+        MIN(albums.name)::text AS album_name,
+        MIN(albums.album_value)::text AS album_value
+      FROM "public"."images" AS image
+      INNER JOIN "public"."images_albums_relation" AS relation
         ON image.id = relation."imageId"
-    LEFT JOIN "public"."albums" AS albums
+      INNER JOIN "public"."albums" AS albums
         ON relation.album_value = albums.album_value
-    WHERE 
-        image.del = 0
-    ORDER BY image.sort DESC, image.created_at DESC, image.updated_at DESC 
-    LIMIT 8 OFFSET ${(pageNum - 1) * 8}
-  `;
+      WHERE image.del = 0
+        AND albums.del = 0
+        AND albums.album_value = ${album}
+      GROUP BY image.id
+      ORDER BY image.sort DESC, image.created_at DESC, image.updated_at DESC
+      LIMIT ${pageSize} OFFSET ${offset}
+    `, 'images:server-list-album')
+  }
+
+  return await withDbRetry(() => db.$queryRaw`
+    SELECT
+      image.*,
+      COALESCE(string_agg(DISTINCT albums.name, ' / ') FILTER (WHERE albums.name IS NOT NULL), '') AS album_name,
+      COALESCE(MIN(albums.album_value), '') AS album_value
+    FROM "public"."images" AS image
+    LEFT JOIN "public"."images_albums_relation" AS relation
+      ON image.id = relation."imageId"
+    LEFT JOIN "public"."albums" AS albums
+      ON relation.album_value = albums.album_value AND albums.del = 0
+    WHERE image.del = 0
+    GROUP BY image.id
+    ORDER BY image.sort DESC, image.created_at DESC, image.updated_at DESC
+    LIMIT ${pageSize} OFFSET ${offset}
+  `, 'images:server-list-all')
 }
 
 /**
@@ -73,49 +69,30 @@ export async function fetchServerImagesListByAlbum(pageNum: number, album: strin
  * @returns 图片总数
  */
 export async function fetchServerImagesPageTotalByAlbum(album: string) {
-  if (album === 'all') {
-    album = ''
-  }
-  if (album && album !== '') {
+  if (album === 'all') album = ''
+
+  if (album) {
     const pageTotal = await db.$queryRaw`
-      SELECT COALESCE(COUNT(1),0) AS total
-      FROM (
-        SELECT DISTINCT ON (image.id)
-            image.id 
-        FROM 
-            "public"."images" AS image
-        INNER JOIN "public"."images_albums_relation" AS relation
-            ON image.id = relation."imageId"
-        INNER JOIN "public"."albums" AS albums
-            ON relation.album_value = albums.album_value
-        WHERE 
-            image.del = 0
-        AND
-            albums.del = 0
-        AND
-            albums.album_value = ${album}
-      ) AS unique_images;
+      SELECT COALESCE(COUNT(DISTINCT image.id),0) AS total
+      FROM "public"."images" AS image
+      INNER JOIN "public"."images_albums_relation" AS relation
+        ON image.id = relation."imageId"
+      INNER JOIN "public"."albums" AS albums
+        ON relation.album_value = albums.album_value
+      WHERE image.del = 0
+        AND albums.del = 0
+        AND albums.album_value = ${album}
     `
     // @ts-ignore
     return Number(pageTotal[0].total) ?? 0
   }
+
   const pageTotal = await db.$queryRaw`
     SELECT COALESCE(COUNT(1),0) AS total
-    FROM (
-      SELECT DISTINCT ON (image.id)
-          image.id
-      FROM
-          "public"."images" AS image
-      LEFT JOIN "public"."images_albums_relation" AS relation
-          ON image.id = relation."imageId"
-      LEFT JOIN "public"."albums" AS albums
-          ON relation.album_value = albums.album_value
-      WHERE
-          image.del = 0
-     ) AS unique_images;
+    FROM "public"."images"
+    WHERE del = 0
   `
   // @ts-ignore
-  // return Number(pageTotal[0].total) > 0 ? Math.ceil(Number(pageTotal[0].total) / 8) : 0
   return Number(pageTotal[0].total) ?? 0
 }
 
@@ -130,7 +107,7 @@ export async function fetchClientImagesListByAlbum(pageNum: number, album: strin
     pageNum = 1
   }
   if (album === '/') {
-    return await db.$queryRaw`
+    return await withDbRetry(() => db.$queryRaw`
     SELECT 
         image.*
     FROM 
@@ -143,13 +120,13 @@ export async function fetchClientImagesListByAlbum(pageNum: number, album: strin
         image.show_on_mainpage = 0
     ORDER BY image.created_at DESC, image.updated_at DESC
     LIMIT 16 OFFSET ${(pageNum - 1) * 16}
-  `;
+  `, 'images:client-home');
   }
-  const albumData = await db.albums.findFirst({
+  const albumData = await withDbRetry(() => db.albums.findFirst({
     where: {
       album_value: album
     }
-  })
+  }), `images:album-sort:${album}`)
   let orderBy = Prisma.sql(['image.sort DESC, image.created_at DESC, image.updated_at DESC'])
   if (albumData && albumData.image_sorting && ALBUM_IMAGE_SORTING_ORDER[albumData.image_sorting]) {
     orderBy = Prisma.sql([`image.sort DESC, ${ALBUM_IMAGE_SORTING_ORDER[albumData.image_sorting]}`])
@@ -367,27 +344,29 @@ export async function fetchImagesAnalysis() {
  * @returns {Promise<ImageType>} 图片详情
  */
 export async function fetchImageByIdAndAuth(id: string): Promise<ImageType[]> {
-  return await db.$queryRaw`
+  return await withDbRetry(() => db.$queryRaw`
     SELECT
         "images".*,
-        "albums".license AS album_license
+        COALESCE(MIN("albums".license), '') AS album_license,
+        COALESCE(string_agg(DISTINCT "albums".name, ' / ') FILTER (WHERE "albums".name IS NOT NULL), '') AS album_name,
+        COALESCE(MIN("albums".album_value), '') AS album_value
     FROM
         "images"
-    INNER JOIN "images_albums_relation"
+    LEFT JOIN "images_albums_relation"
         ON "images"."id" = "images_albums_relation"."imageId"
-    INNER JOIN "albums"
+    LEFT JOIN "albums"
         ON "images_albums_relation".album_value = "albums".album_value
+       AND "albums".del = 0
+       AND "albums".show = 0
     WHERE
         "images".del = 0
     AND
-        "albums".del = 0
-    AND
         "images".show = 0
     AND
-        "albums".show = 0
-    AND
         "images".id = ${id}
-  `;
+    GROUP BY "images".id
+    LIMIT 1
+  `, `images:preview:${id}`);
 }
 
 /**

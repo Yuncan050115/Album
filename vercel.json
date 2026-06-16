@@ -1,0 +1,6 @@
+{
+  "framework": "nextjs",
+  "installCommand": "pnpm install --frozen-lockfile=false",
+  "buildCommand": "pnpm prisma:generate && pnpm build",
+  "devCommand": "pnpm dev"
+}

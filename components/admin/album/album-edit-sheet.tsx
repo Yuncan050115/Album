@@ -82,7 +82,7 @@ export default function AlbumEditSheet(props : Readonly<HandleProps>) {
             <input
               type="text"
               id="name"
-              value={album?.name}
+              value={album?.name ?? ''}
               placeholder="输入相册名称"
               onChange={(e) => setAlbumEditData({...album, name: e.target.value})}
               className="mt-1 w-full border-none p-0 focus:border-transparent focus:outline-none focus:ring-0 sm:text-sm"
@@ -97,7 +97,7 @@ export default function AlbumEditSheet(props : Readonly<HandleProps>) {
             <input
               type="text"
               id="album_value"
-              value={album?.album_value}
+              value={album?.album_value ?? ''}
               placeholder="输入路由，如：/tietie"
               onChange={(e) => setAlbumEditData({...album, album_value: e.target.value})}
               className="mt-1 w-full border-none p-0 focus:border-transparent focus:outline-none focus:ring-0 sm:text-sm"
@@ -127,7 +127,7 @@ export default function AlbumEditSheet(props : Readonly<HandleProps>) {
             <input
               type="number"
               id="sort"
-              value={album?.sort}
+              value={album?.sort ?? ''}
               placeholder="0"
               onChange={(e) => setAlbumEditData({...album, sort: Number(e.target.value)})}
               className="mt-1 w-full border-none p-0 focus:border-transparent focus:outline-none focus:ring-0 sm:text-sm"
@@ -181,7 +181,7 @@ export default function AlbumEditSheet(props : Readonly<HandleProps>) {
           <div className="flex flex-col gap-1 rounded-lg border p-3 shadow-sm">
               <div className="text-medium">相册内图片排序规则</div>
               <Select
-                value={typeof album.image_sorting === 'number' ? album.image_sorting.toString() : '1'}
+                value={typeof album?.image_sorting === 'number' ? album.image_sorting.toString() : '1'}
                 onValueChange={(value) => {
                   setAlbumEditData({
                     ...album,

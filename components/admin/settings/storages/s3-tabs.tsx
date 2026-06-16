@@ -19,6 +19,25 @@ import { useButtonStore } from '~/app/providers/button-store-providers'
 import S3EditSheet from '~/components/admin/settings/storages/s3-edit-sheet'
 import { Badge } from '~/components/ui/badge'
 
+const S3_CONFIG_FALLBACK = [
+  { id: 'accesskey_id', config_key: 'accesskey_id', config_value: '', detail: 'Access Key ID' },
+  { id: 'accesskey_secret', config_key: 'accesskey_secret', config_value: '', detail: 'Secret Access Key' },
+  { id: 'region', config_key: 'region', config_value: '', detail: 'Region' },
+  { id: 'endpoint', config_key: 'endpoint', config_value: '', detail: 'Endpoint' },
+  { id: 'bucket', config_key: 'bucket', config_value: '', detail: 'Bucket' },
+  { id: 'storage_folder', config_key: 'storage_folder', config_value: '', detail: '存储目录' },
+  { id: 'force_path_style', config_key: 'force_path_style', config_value: 'true', detail: 'Force path style' },
+  { id: 's3_cdn', config_key: 's3_cdn', config_value: 'false', detail: '是否启用 CDN' },
+  { id: 's3_cdn_url', config_key: 's3_cdn_url', config_value: '', detail: 'CDN 地址' },
+]
+
+async function readJsonResponse(res: Response) {
+  const text = await res.text()
+  try { return text ? JSON.parse(text) : {} }
+  catch { return { code: res.status || 500, message: text || `HTTP ${res.status}` } }
+}
+
+
 export default function S3Tabs() {
   const [connectionLoading, setConnectionLoading] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'unconfigured' | null>(null)
@@ -53,13 +72,14 @@ export default function S3Tabs() {
     setConnectionStatus(null)
     
     try {
-      const res = await fetch('/api/v1/storage/test-connection', {
+      const response = await fetch('/api/v1/storage/test-connection', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ storage: 's3' })
-      }).then(res => res.json())
+      })
+      const res = await readJsonResponse(response)
       
-      if (res?.code === 200) {
+      if (response.ok && res?.code === 200) {
         toast.success('S3连接成功')
         setConnectionStatus('connected')
       } else {
@@ -126,8 +146,9 @@ export default function S3Tabs() {
               variant="outline"
               className="cursor-pointer"
               onClick={() => {
+                const rows = Array.isArray(data) ? data : S3_CONFIG_FALLBACK
+                setS3EditData(rows.map((item: any) => ({ ...item })))
                 setS3Edit(true)
-                setS3EditData(JSON.parse(JSON.stringify(data)))
               }}
               aria-label="编辑"
             >
@@ -135,9 +156,9 @@ export default function S3Tabs() {
             </Button>
           </div>
         </div>
-      </ Card>
+      </Card>
       {
-        data &&
+        Array.isArray(data) &&
         <Card className="p-2">
           <Table aria-label="S3 设置">
             <TableHeader>
@@ -157,7 +178,7 @@ export default function S3Tabs() {
           </Table>
         </Card>
       }
-      {Array.isArray(data) && data.length > 0 && <S3EditSheet />}
+      <S3EditSheet />
     </div>
   )
 }

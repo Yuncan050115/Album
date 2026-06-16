@@ -17,8 +17,9 @@ import { MagicCursor, Footer, DynamicBackground } from '~/components/SiteEssenti
 import { fetchConfigsByKeys } from '~/server/db/query/configs'
 
 // 样式
-import { moqugufeng } from '~/app/font'
 import '~/style/globals.css'
+
+export const revalidate = 300
 
 type Props = {
     params: { id: string }
@@ -26,19 +27,24 @@ type Props = {
 }
 
 export async function generateMetadata(
-    { params, searchParams }: Props,
-    parent: ResolvingMetadata
+    _props: Props,
+    _parent: ResolvingMetadata
 ): Promise<Metadata> {
-    const data = await fetchConfigsByKeys([
-        'custom_title',
-        'custom_favicon_url'
-    ])
+    try {
+        const data = await fetchConfigsByKeys([
+            'custom_title',
+            'custom_favicon_url'
+        ])
 
-    return {
-        title: data?.find((item: any) => item.config_key === 'custom_title')?.config_value || 'Yuncan 之江影集',
-        icons: {
-            icon: data?.find((item: any) => item.config_key === 'custom_favicon_url')?.config_value || './favicon.ico'
-        },
+        return {
+            title: data?.find((item: any) => item.config_key === 'custom_title')?.config_value || 'Yuncan 之江影集',
+            icons: {
+                icon: data?.find((item: any) => item.config_key === 'custom_favicon_url')?.config_value || './favicon.ico'
+            },
+        }
+    } catch (error) {
+        console.warn('metadata config fallback:', error)
+        return { title: 'Yuncan 之江影集', icons: { icon: './favicon.ico' } }
     }
 }
 
@@ -49,20 +55,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     return (
         <html
             lang={locale}
-            className={`overflow-y-auto scrollbar-hide ${moqugufeng.variable} font-moqugufeng`}
+            className="overflow-y-auto scrollbar-hide"
             suppressHydrationWarning
-            style={{cursor: 'none'}}
+            data-scroll-behavior="smooth"
         >
-        <head>
-            <link
-                rel="preload"
-                href="/public/fonts/MoquGufeng.woff2"
-                as="font"
-                type="font/woff2"
-                crossOrigin="anonymous"
-                key="moqungufeng-preload"
-            />
-        </head>
         <body className="min-h-screen bg-background antialiased">
         <SessionProviders>
             <NextIntlClientProvider messages={messages}>

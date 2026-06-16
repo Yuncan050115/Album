@@ -26,8 +26,14 @@ export function NavProjects({
 }) {
   const router = useRouter()
   const pathname = usePathname()
-  const buttonClasses = 'active:scale-95 duration-200 ease-in-out cursor-pointer'
   const { setOpenMobile } = useSidebar()
+  const buttonClasses = 'cursor-pointer rounded-xl transition-all duration-200 ease-out active:scale-[0.98] data-[active=true]:shadow-sm'
+
+  const go = (url: string) => {
+    if (pathname === url) return
+    setOpenMobile(false)
+    router.push(url)
+  }
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
@@ -37,16 +43,11 @@ export function NavProjects({
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton
               className={buttonClasses}
-              asChild
-              isActive={pathname === item.url}
-              onClick={() => {
-                setOpenMobile(false)
-                router.push(item.url)
-              }}>
-              <a href={item.url}>
-                <item.icon size={18} />
-                <span>{item.name}</span>
-              </a>
+              isActive={pathname.startsWith(item.url)}
+              onClick={() => go(item.url)}
+            >
+              <item.icon size={18} />
+              <span>{item.name}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}
