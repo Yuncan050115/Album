@@ -1,6 +1,6 @@
 {
   "framework": "nextjs",
-  "installCommand": "corepack enable && corepack prepare pnpm@10.18.0 --activate && pnpm install --frozen-lockfile=false",
-  "buildCommand": "pnpm prisma:generate && pnpm build",
+  "installCommand": "node -v && npm -v && npm install -g pnpm@10.18.0 && pnpm -v && pnpm install --frozen-lockfile=false",
+  "buildCommand": "node -v && pnpm -v && pnpm prisma:generate && pnpm build",
   "devCommand": "pnpm dev"
 }
