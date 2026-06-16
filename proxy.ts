@@ -15,7 +15,7 @@ export async function proxy(req: NextRequest) {
     pathname === '/api/v1/images/client-list' ||
     pathname === '/api/v1/albums/get'
   )
-  const needsAuth = pathname.startsWith('/admin') || (pathname.startsWith('/api/v1') && !publicApi)
+  const needsAuth = pathname.startsWith('/api/v1') && !publicApi
 
   if (!needsAuth) return NextResponse.next()
 
